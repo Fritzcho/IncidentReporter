@@ -195,27 +195,13 @@ struct IncidentMapView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .padding(.top, 8)
             }
+            
+            // Satellite vs Standard map style toggle
+            // MapStyleToggleButton(isSatelliteStyle: $isSatelliteStyle)
 
             Spacer()
 
             VStack(alignment: .trailing, spacing: 12) {
-                // Satellite vs Standard map style toggle
-                MapStyleToggleButton(isSatelliteStyle: $isSatelliteStyle)
-
-                // Toggle Swedish Police API reports button
-                PoliceFilterButton(showPoliceReports: $showPoliceReports)
-
-                // Toggle Trygga platser (Safe Havens) button
-                SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
-
-                // Discreet Fake Call button
-                DiscreetCallButton {
-                    isPresentingFakeCallLauncher = true
-                }
-
-                // Filter incidents by recency / time decay
-                TimeFilterMenuButton(timeFilter: $timeFilter)
-
                 // Sync Swedish Police events button (available when police reports are enabled)
                 if showPoliceReports {
                     PoliceSyncButton(isSyncing: isSyncingPoliceEvents) {
@@ -230,7 +216,21 @@ struct IncidentMapView: View {
                     .transition(.scale.combined(with: .opacity))
                 }
 
-                Spacer()
+                // Toggle Swedish Police API reports button
+                PoliceFilterButton(showPoliceReports: $showPoliceReports)
+                
+
+                // Toggle Trygga platser (Safe Havens) button
+                SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
+
+                // Discreet Fake Call button
+                DiscreetCallButton {
+                    isPresentingFakeCallLauncher = true
+                }
+
+                // Filter incidents by recency / time decay
+                TimeFilterMenuButton(timeFilter: $timeFilter)
+
 
                 ReportDangerButton {
                     isPresentingReportSheet = true
@@ -238,7 +238,6 @@ struct IncidentMapView: View {
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.horizontal, 14)
-            .padding(.top, 42)
             .padding(.bottom, 24)
         }
     }

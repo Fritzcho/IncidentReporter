@@ -7,7 +7,7 @@ struct TimeFilterMenuButton: View {
     var body: some View {
         Menu {
             Section("Incident Recency") {
-                ForEach(IncidentTimeFilter.allCases) { filter in
+                ForEach(IncidentTimeFilter.allCases.reversed()) { filter in
                     Button {
                         timeFilter = filter
                     } label: {

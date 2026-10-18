@@ -91,6 +91,9 @@
     "1.0.0" : {
 
     },
+    "14 Test Incidents Reloaded" : {
+
+    },
     "Accept" : {
 
     },
@@ -750,6 +753,9 @@
         }
       }
     },
+    "Loads 14 realistic test incidents across Central Stockholm, Södermalm, Vasastan, and nearby transit stops." : {
+
+    },
     "Location Source" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1046,6 +1052,9 @@
     "Recent" : {
 
     },
+    "Reload Stockholm Test Incidents" : {
+
+    },
     "Remind Me" : {
 
     },
@@ -1332,6 +1341,9 @@
           }
         }
       }
+    },
+    "Testing & Demo Data" : {
+
     },
     "This will remove all reports older than 48 hours from your local storage." : {
 

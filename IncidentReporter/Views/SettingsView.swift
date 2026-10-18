@@ -35,7 +35,7 @@ struct SettingsView: View {
     @Query private var incidents: [Incident]
     @State private var showingClearConfirmation = false
     @State private var clearedCount = 0
-    @State private var showingClearedToast = false
+    @State private var testIncidentsLoaded = false
 
     var body: some View {
         NavigationStack {
@@ -70,6 +70,22 @@ struct SettingsView: View {
                         HStack {
                             Image(systemName: "trash")
                             Text("Clear Expired Alerts (> 48h)")
+                        }
+                    }
+                }
+
+                Section(
+                    header: Text("Testing & Demo Data"),
+                    footer: Text("Loads 14 realistic test incidents across Central Stockholm, Södermalm, Vasastan, and nearby transit stops.")
+                ) {
+                    Button {
+                        loadTestIncidents()
+                    } label: {
+                        HStack {
+                            Image(systemName: testIncidentsLoaded ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath")
+                                .foregroundStyle(testIncidentsLoaded ? Color.green : Color.accentColor)
+                            Text(testIncidentsLoaded ? "14 Test Incidents Reloaded" : "Reload Stockholm Test Incidents")
+                                .foregroundStyle(testIncidentsLoaded ? Color.green : Color.primary)
                         }
                     }
                 }
@@ -120,5 +136,38 @@ struct SettingsView: View {
         }
         try? modelContext.save()
         clearedCount = count
+    }
+
+    private func loadTestIncidents() {
+        var existingByExtId: [String: Incident] = [:]
+        var existingByTitle: [String: Incident] = [:]
+        for item in incidents {
+            if let extId = item.externalId {
+                existingByExtId[extId] = item
+            }
+            existingByTitle[item.title] = item
+        }
+
+        let samples = SampleIncidents.createSampleIncidents()
+        for sample in samples {
+            if let extId = sample.externalId, let matched = existingByExtId[extId] {
+                matched.timestamp = sample.timestamp
+                matched.latitude = sample.latitude
+                matched.longitude = sample.longitude
+                matched.details = sample.details
+            } else if let matched = existingByTitle[sample.title] {
+                matched.externalId = sample.externalId
+                matched.timestamp = sample.timestamp
+                matched.latitude = sample.latitude
+                matched.longitude = sample.longitude
+                matched.details = sample.details
+            } else {
+                modelContext.insert(sample)
+            }
+        }
+        try? modelContext.save()
+        withAnimation {
+            testIncidentsLoaded = true
+        }
     }
 }
