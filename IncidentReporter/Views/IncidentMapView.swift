@@ -15,8 +15,19 @@ struct IncidentMapView: View {
     )
     @State private var selectedIncident: Incident?
     @State private var selectedSafeHaven: SafeHaven?
+    @State private var selectedTransitStop: TransitStop?
+    @State private var transitStops: [TransitStop] = []
+    @State private var isLoadingTransit = false
+    @State private var isPresentingStopSearch = false
+    /// A transit icon drawn by Apple Maps that the user tapped
+    @State private var selectedMapFeature: MapFeature?
+    /// Visible map area, used to draw every SL stop in view when zoomed in
+    @State private var visibleRegion: MKCoordinateRegion?
+    @State private var visibleStops: [TransitStopSummary] = []
+    @State private var loadingStopID: Int?
     @State private var isPresentingReportSheet = false
     @State private var isPresentingFakeCallLauncher = false
+    @State private var isPresentingTaxiLauncher = false
     @State private var isSatelliteStyle = false
     @State private var isSyncingPoliceEvents = false
     @State private var safeHavens: [SafeHaven] = SafeHavenService.shared.curatedHavens
@@ -24,6 +35,7 @@ struct IncidentMapView: View {
 
     @AppStorage("showPoliceReports") private var showPoliceReports = true
     @AppStorage("showSafeHavens") private var showSafeHavens = true
+    @AppStorage("showNearestTransit") private var showTransit = true
     @AppStorage("incidentTimeFilter") private var timeFilter: IncidentTimeFilter = .twelveHours
 
     /// Incidents filtered according to user's police report preferences and time decay window
@@ -37,6 +49,33 @@ struct IncidentMapView: View {
             }
             return true
         }
+    }
+
+    /// Reference point for the nearest-stop search: the user's position, or Central Stockholm
+    private var transitReferenceLocation: CLLocation {
+        locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
+    }
+
+    /// Changes when the user moves roughly 200 m, so nearest stops are re-resolved without re-querying on every GPS fix
+    private var transitSearchKey: String {
+        let coordinate = transitReferenceLocation.coordinate
+        return "\(showTransit)-\(Int(coordinate.latitude * 500))-\(Int(coordinate.longitude * 250))"
+    }
+
+    /// Stop markers are only drawn when the map shows roughly 3 km or less, to keep the map readable
+    private static let stopMarkerMaxSpan: CLLocationDegrees = 0.03
+
+    /// Changes when the user pans or zooms meaningfully, so stop markers reload without thrashing
+    private var visibleStopsKey: String {
+        guard showTransit, let region = visibleRegion else { return "hidden" }
+        guard region.span.latitudeDelta <= Self.stopMarkerMaxSpan else { return "zoomed-out" }
+        return "\(Int(region.center.latitude * 2000))-\(Int(region.center.longitude * 1000))-\(Int(region.span.latitudeDelta * 2000))"
+    }
+
+    /// Visible stop markers, minus stops that already have a nearest-stop pin
+    private var stopMarkers: [TransitStopSummary] {
+        let pinned = Set(transitStops.map(\.id))
+        return visibleStops.filter { !pinned.contains($0.id) }
     }
 
     /// Filter to only show public transport POIs (bus stops, subways, train stations) and hide restaurants, hotels, etc.
@@ -60,10 +99,22 @@ struct IncidentMapView: View {
                 userLocation: locationManager.userLocation
             )
         }
+        .sheet(item: $selectedTransitStop) { stop in
+            TransitStopDetailSheet(
+                stop: stop,
+                userLocation: locationManager.userLocation
+            )
+        }
         .sheet(isPresented: $isPresentingReportSheet) {
             ReportIncidentSheet(
                 initialCoordinate: locationManager.userLocation?.coordinate
             )
+        }
+        .sheet(isPresented: $isPresentingStopSearch) {
+            TransitStopSearchSheet(userLocation: locationManager.userLocation)
+        }
+        .sheet(isPresented: $isPresentingTaxiLauncher) {
+            TaxiLauncherSheet(userLocation: locationManager.userLocation)
         }
         .sheet(isPresented: $isPresentingFakeCallLauncher) {
             FakeCallLauncherSheet()
@@ -84,6 +135,16 @@ struct IncidentMapView: View {
                 await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference)
             }
             safeHavens = await SafeHavenService.shared.fetchHavens(around: reference.coordinate)
+        }
+        .task(id: transitSearchKey) {
+            await refreshTransitStops()
+        }
+        .task(id: visibleStopsKey) {
+            await loadVisibleStops()
+        }
+        .onChange(of: selectedMapFeature) { _, feature in
+            guard let feature else { return }
+            Task { await openDepartures(for: feature) }
         }
         .onChange(of: locationManager.userLocation) { oldLoc, newLoc in
             locationManager.checkProximity(to: displayedIncidents)
@@ -133,13 +194,39 @@ struct IncidentMapView: View {
 
     // MARK: - Subviews
     private var mapLayer: some View {
-        Map(position: $cameraPosition) {
+        Map(position: $cameraPosition, selection: $selectedMapFeature) {
             UserAnnotation()
 
             // Danger & incident annotations
             ForEach(displayedIncidents) { incident in
                 Annotation(incident.title, coordinate: incident.coordinate) {
                     annotationView(for: incident)
+                }
+            }
+
+            // Every SL stop in view when zoomed in; tap for departures
+            ForEach(stopMarkers) { stop in
+                Annotation(stop.name, coordinate: stop.coordinate) {
+                    BusStopMarkerIcon(name: stop.name, isLoading: loadingStopID == stop.id)
+                        .onTapGesture {
+                            Task { await openDepartures(for: stop) }
+                        }
+                }
+                .annotationTitles(.hidden)
+            }
+
+            // Nearest subway, commuter train & bus stops with live departures
+            if showTransit {
+                ForEach(transitStops) { stop in
+                    Annotation(stop.name, coordinate: stop.coordinate) {
+                        TransitStopAnnotationView(
+                            stop: stop,
+                            isSelected: selectedTransitStop?.id == stop.id
+                        )
+                        .onTapGesture {
+                            selectedTransitStop = stop
+                        }
+                    }
                 }
             }
 
@@ -163,12 +250,70 @@ struct IncidentMapView: View {
                 ? .hybrid(elevation: .realistic, pointsOfInterest: transitOnlyPOIFilter)
                 : .standard(elevation: .realistic, pointsOfInterest: transitOnlyPOIFilter)
         )
+        .onMapCameraChange(frequency: .onEnd) { context in
+            visibleRegion = context.region
+        }
         .mapControls {
             MapUserLocationButton()
             MapCompass()
             MapScaleView()
             MapPitchToggle()
         }
+    }
+
+    /// Resolves the nearest subway station, commuter train station and bus stop, then keeps their departures fresh every minute.
+    private func refreshTransitStops() async {
+        guard showTransit else {
+            transitStops = []
+            return
+        }
+        isLoadingTransit = transitStops.isEmpty
+        if let stops = try? await SLTransitService.shared.nearestStops(to: transitReferenceLocation) {
+            transitStops = stops
+        }
+        isLoadingTransit = false
+
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(60))
+            guard !Task.isCancelled else { return }
+            var refreshed: [TransitStop] = []
+            for stop in transitStops {
+                refreshed.append((try? await SLTransitService.shared.refresh(stop)) ?? stop)
+            }
+            transitStops = refreshed
+        }
+    }
+
+    private func loadVisibleStops() async {
+        guard showTransit,
+              let region = visibleRegion,
+              region.span.latitudeDelta <= Self.stopMarkerMaxSpan else {
+            visibleStops = []
+            return
+        }
+        if let stops = try? await SLTransitService.shared.stops(in: region) {
+            visibleStops = stops
+        }
+    }
+
+    private func openDepartures(for summary: TransitStopSummary) async {
+        guard loadingStopID == nil else { return }
+        loadingStopID = summary.id
+        defer { loadingStopID = nil }
+        if let stop = try? await SLTransitService.shared.stop(for: summary) {
+            selectedTransitStop = stop
+        }
+    }
+
+    /// Opens live departures for a subway, train, tram, bus or boat icon tapped on the base map.
+    private func openDepartures(for feature: MapFeature) async {
+        defer { selectedMapFeature = nil }
+        guard feature.pointOfInterestCategory == .publicTransport,
+              let summary = try? await SLTransitService.shared.nearestStop(to: feature.coordinate),
+              let stop = try? await SLTransitService.shared.stop(for: summary) else {
+            return
+        }
+        selectedTransitStop = stop
     }
 
     private func annotationView(for incident: Incident) -> some View {
@@ -222,6 +367,19 @@ struct IncidentMapView: View {
 
                 // Toggle Trygga platser (Safe Havens) button
                 SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
+
+                // Toggle nearest subway, commuter train & bus stops
+                TransitFilterButton(showTransit: $showTransit, isLoading: isLoadingTransit)
+
+                // Look up departures at any SL stop
+                TransitSearchButton {
+                    isPresentingStopSearch = true
+                }
+
+                // Call a taxi
+                TaxiCallButton {
+                    isPresentingTaxiLauncher = true
+                }
 
                 // Discreet Fake Call button
                 DiscreetCallButton {
