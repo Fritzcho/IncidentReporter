@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%.1f km" : {
+
+    },
     "%.1f km ahead" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -55,10 +58,33 @@
         }
       }
     },
+    "%@ → %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ → %2$@"
+          }
+        }
+      }
+    },
     "%@ ago" : {
 
     },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
     "%lld" : {
+
+    },
+    "%lld m" : {
 
     },
     "%lld m ahead" : {
@@ -95,6 +121,16 @@
         }
       }
     },
+    "%lld m away • ~%lld min walk" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld m away • ~%2$lld min walk"
+          }
+        }
+      }
+    },
     "%lld min" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -116,6 +152,9 @@
 
     },
     "• %@" : {
+
+    },
+    "+%lld min late" : {
 
     },
     "+5 min" : {
@@ -182,6 +221,9 @@
       }
     },
     "Address" : {
+
+    },
+    "Address copied" : {
 
     },
     "Alert Summary" : {
@@ -258,6 +300,9 @@
         }
       }
     },
+    "Boat" : {
+
+    },
     "Brief Summary (e.g. Followed near T-Centralen)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -274,6 +319,21 @@
           }
         }
       }
+    },
+    "Bus" : {
+
+    },
+    "Call %@" : {
+
+    },
+    "Call a taxi" : {
+
+    },
+    "Call a Taxi" : {
+
+    },
+    "Call a taxi instead" : {
+
     },
     "Call Me Now" : {
 
@@ -423,6 +483,15 @@
         }
       }
     },
+    "Closed" : {
+
+    },
+    "Closed · %@" : {
+
+    },
+    "Closed until %@" : {
+
+    },
     "Community" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -439,6 +508,9 @@
           }
         }
       }
+    },
+    "Commuter train" : {
+
     },
     "Coordinates" : {
       "extractionState" : "manual",
@@ -457,6 +529,9 @@
         }
       }
     },
+    "Copy pickup address" : {
+
+    },
     "Could not find address. Check spelling or try again." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -473,6 +548,15 @@
           }
         }
       }
+    },
+    "Couldn't load departures for %@." : {
+
+    },
+    "Couldn't load SL stops. Check your connection and try again." : {
+
+    },
+    "Couldn't open %@" : {
+
     },
     "Current device GPS location" : {
       "extractionState" : "manual",
@@ -538,6 +622,9 @@
 
     },
     "Delete recorded voice memo" : {
+
+    },
+    "Departures" : {
 
     },
     "Describe what happened, descriptions of individuals, or safer detours..." : {
@@ -881,6 +968,16 @@
         }
       }
     },
+    "First departure: %@ → %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "First departure: %1$@ → %2$@"
+          }
+        }
+      }
+    },
     "Freshness" : {
 
     },
@@ -934,6 +1031,9 @@
           }
         }
       }
+    },
+    "Hide nearest transit stops" : {
+
     },
     "Hide safe havens" : {
 
@@ -1005,6 +1105,9 @@
 
     },
     "In 30 seconds" : {
+
+    },
+    "In an emergency, call 112." : {
 
     },
     "Incident Information" : {
@@ -1104,6 +1207,12 @@
         }
       }
     },
+    "Last departure %@" : {
+
+    },
+    "Live departures from SL. Updated %@." : {
+
+    },
     "Loads 14 realistic test incidents across Central Stockholm, Södermalm, Vasastan, and nearby transit stops." : {
 
     },
@@ -1166,6 +1275,12 @@
           }
         }
       }
+    },
+    "Nearby stops" : {
+
+    },
+    "Next departure %@" : {
+
     },
     "No active police incidents in this area." : {
       "extractionState" : "manual",
@@ -1235,6 +1350,9 @@
         }
       }
     },
+    "No departures right now" : {
+
+    },
     "No location found for this address." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1286,10 +1404,25 @@
         }
       }
     },
+    "No service" : {
+
+    },
+    "No upcoming departures found" : {
+
+    },
+    "Now" : {
+
+    },
+    "OK" : {
+
+    },
     "Older incidents fade automatically to keep danger signals prominent." : {
 
     },
     "Open 24/7 • Staffed" : {
+
+    },
+    "Open app" : {
 
     },
     "Open Report Alert" : {
@@ -1348,6 +1481,12 @@
           }
         }
       }
+    },
+    "Pickup location" : {
+
+    },
+    "Platform %@" : {
+
     },
     "Play voice memo" : {
 
@@ -1560,6 +1699,12 @@
         }
       }
     },
+    "Ride apps" : {
+
+    },
+    "Running" : {
+
+    },
     "Safety & Quick Triggers" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1736,6 +1881,12 @@
         }
       }
     },
+    "Search any SL stop" : {
+
+    },
+    "Search departures at any stop" : {
+
+    },
     "Send Emergency SOS SMS Now" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1804,7 +1955,16 @@
         }
       }
     },
+    "Show nearest transit stops" : {
+
+    },
     "Show safe havens" : {
+
+    },
+    "Shows departures" : {
+
+    },
+    "SL has no upcoming departures listed for this stop." : {
 
     },
     "Start %lld-Minute Safety Timer" : {
@@ -1853,6 +2013,9 @@
     "Starts a 20-minute Safety Walk countdown timer with check-in reminders." : {
 
     },
+    "Stop %@" : {
+
+    },
     "Stop Recording" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1876,6 +2039,9 @@
     "Stop voice memo preview" : {
 
     },
+    "Stops" : {
+
+    },
     "Streets appear clear or no alerts match your search." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1894,6 +2060,9 @@
       }
     },
     "Submit Alert" : {
+
+    },
+    "Subway" : {
 
     },
     "Subway & Transit Danger" : {
@@ -1998,7 +2167,16 @@
         }
       }
     },
+    "Taxi companies" : {
+
+    },
+    "Tell the dispatcher this address when you call." : {
+
+    },
     "Testing & Demo Data" : {
+
+    },
+    "This device can't place phone calls." : {
 
     },
     "This will remove all reports older than 48 hours from your local storage." : {
@@ -2039,6 +2217,9 @@
       }
     },
     "Timing Delay" : {
+
+    },
+    "Tram & light rail" : {
 
     },
     "Trigger Discreet Fake Call" : {
@@ -2156,6 +2337,9 @@
       }
     },
     "Walk Here (Apple Maps)" : {
+
+    },
+    "Walking directions" : {
 
     }
   },
