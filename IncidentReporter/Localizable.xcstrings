@@ -35,6 +35,16 @@
         }
       }
     },
+    "%@ / %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@"
+          }
+        }
+      }
+    },
     "%@ • %@" : {
       "localizations" : {
         "en" : {
@@ -85,11 +95,62 @@
         }
       }
     },
+    "%lld min" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
+          }
+        }
+      }
+    },
     "•" : {
 
     },
-    "1.0.0" : {
+    "• %@" : {
 
+    },
+    "+5 min" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+5 min"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+5 min"
+          }
+        }
+      }
+    },
+    "1.2.0 (Sprint 2)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1.2.0 (Sprint 2)"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1.2.0 (Sprint 2)"
+          }
+        }
+      }
     },
     "14 Test Incidents Reloaded" : {
 
@@ -102,6 +163,23 @@
     },
     "Active Stored Incidents" : {
 
+    },
+    "Add 5 Extra Minutes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add 5 Extra Minutes"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lägg till 5 extra minuter"
+          }
+        }
+      }
     },
     "Address" : {
 
@@ -142,6 +220,26 @@
     },
     "Appearance & Info" : {
 
+    },
+    "Assign the iPhone Action Button or Back Tap in Apple Shortcuts to 'Trigger Fake Call', 'Start Safety Timer', or 'Report Danger' for instant eyes-free access." : {
+
+    },
+    "Attached Voice Memo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attached Voice Memo"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bifogat röstmemon"
+          }
+        }
+      }
     },
     "Being Followed / Stalked" : {
       "extractionState" : "manual",
@@ -233,6 +331,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Varning"
+          }
+        }
+      }
+    },
+    "Check in immediately or alert your emergency contact." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check in immediately or alert your emergency contact."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checka in omedelbart eller larma din nödkontakt."
+          }
+        }
+      }
+    },
+    "Check-in countdown: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-in countdown: %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nedräkning för incheckning: %@"
+          }
+        }
+      }
+    },
+    "Check-In Duration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-In Duration"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tid till incheckning"
           }
         }
       }
@@ -388,6 +537,9 @@
     "Delete" : {
 
     },
+    "Delete recorded voice memo" : {
+
+    },
     "Describe what happened, descriptions of individuals, or safer detours..." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -404,6 +556,26 @@
           }
         }
       }
+    },
+    "Destination note (e.g. Home, Odenplan)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destination note (e.g. Home, Odenplan)"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Destination (t.ex. Hem, Odenplan)"
+          }
+        }
+      }
+    },
+    "Destination: %@" : {
+
     },
     "Details & Advice for Others" : {
       "extractionState" : "manual",
@@ -456,11 +628,62 @@
         }
       }
     },
+    "Disabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disabled"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avaktiverad"
+          }
+        }
+      }
+    },
+    "Disarm Alarm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disarm Alarm"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stäng av larm"
+          }
+        }
+      }
+    },
     "Discreet Call" : {
 
     },
     "Discreet fake call" : {
 
+    },
+    "Discreet Fake Call" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discreet Fake Call"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diskret fejksamtal"
+          }
+        }
+      }
     },
     "Discreet Safety Call" : {
 
@@ -499,6 +722,40 @@
         }
       }
     },
+    "Duration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duration"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varaktighet"
+          }
+        }
+      }
+    },
+    "Duration: %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duration: %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Längd: %@"
+          }
+        }
+      }
+    },
     "Elevated Risk" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -512,6 +769,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Förhöjd risk"
+          }
+        }
+      }
+    },
+    "Emergency Phone (+46 70 123 45 67)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Emergency Phone (+46 70 123 45 67)"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nödtelefon (+46 70 123 45 67)"
           }
         }
       }
@@ -570,6 +844,23 @@
     "Evening hours" : {
 
     },
+    "EXPIRED" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EXPIRED"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UTGÅNGEN"
+          }
+        }
+      }
+    },
     "Filter by time range: %@" : {
 
     },
@@ -606,6 +897,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "GPS-plats är inte tillgänglig. Förval är Stockholms central."
+          }
+        }
+      }
+    },
+    "Hands-Free Voice Note" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hands-Free Voice Note"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Handsfree-röstanteckning"
           }
         }
       }
@@ -650,7 +958,47 @@
     "Historical" : {
 
     },
+    "I'm Safe" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I'm Safe"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jag är trygg"
+          }
+        }
+      }
+    },
+    "I'm Safe — Disarm with Face ID" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I'm Safe — Disarm with Face ID"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jag är trygg — Stäng av med Face ID"
+          }
+        }
+      }
+    },
+    "If you don't confirm you are safe before the timer expires, an audible alarm sounds and an SOS message with your GPS coordinates can be sent to your trusted contact." : {
+
+    },
     "Immediately" : {
+
+    },
+    "Immediately triggers an incoming safety phone call screen in IncidentTracker." : {
 
     },
     "In 10 seconds" : {
@@ -730,6 +1078,9 @@
         }
       }
     },
+    "Includes voice memo" : {
+
+    },
     "Incoming Call • Mobile" : {
 
     },
@@ -772,6 +1123,9 @@
           }
         }
       }
+    },
+    "Manage active safety timer" : {
+
     },
     "Map" : {
       "extractionState" : "manual",
@@ -938,6 +1292,26 @@
     "Open 24/7 • Staffed" : {
 
     },
+    "Open Report Alert" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Report Alert"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öppna rapportera fara"
+          }
+        }
+      }
+    },
+    "Opens IncidentTracker directly to the Report Safety Alert screen with your current location." : {
+
+    },
     "Or enter custom name..." : {
 
     },
@@ -974,6 +1348,12 @@
           }
         }
       }
+    },
+    "Play voice memo" : {
+
+    },
+    "Play voice memo preview" : {
+
     },
     "Police" : {
       "extractionState" : "manual",
@@ -1052,8 +1432,76 @@
     "Recent" : {
 
     },
+    "Record" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela in"
+          }
+        }
+      }
+    },
+    "Record up to 60s instead of typing while walking" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record up to 60s instead of typing while walking"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spela in upp till 60 s istället för att skriva när du går"
+          }
+        }
+      }
+    },
+    "Recording voice memo..." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording voice memo..."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spelar in röstmemon..."
+          }
+        }
+      }
+    },
     "Reload Stockholm Test Incidents" : {
 
+    },
+    "Remaining" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remaining"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Återstår"
+          }
+        }
+      }
     },
     "Remind Me" : {
 
@@ -1092,6 +1540,9 @@
         }
       }
     },
+    "Report Safety Incident" : {
+
+    },
     "Report Source" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1105,6 +1556,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rapportkälla"
+          }
+        }
+      }
+    },
+    "Safety & Quick Triggers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safety & Quick Triggers"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trygghet & snabbkommandon"
+          }
+        }
+      }
+    },
+    "Safety Actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safety Actions"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trygghetsåtgärder"
           }
         }
       }
@@ -1180,6 +1665,57 @@
         }
       }
     },
+    "Safety Timer Expired!" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safety Timer Expired!"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trygghetstimern har gått ut!"
+          }
+        }
+      }
+    },
+    "Safety Walk Active" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safety Walk Active"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trygghetsvandring aktiv"
+          }
+        }
+      }
+    },
+    "Safety Walk Timer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Safety Walk Timer"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trygghetstimer"
+          }
+        }
+      }
+    },
     "Schedule Call (%llds)" : {
 
     },
@@ -1196,6 +1732,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sök varningar, kategorier, råd..."
+          }
+        }
+      }
+    },
+    "Send Emergency SOS SMS Now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send Emergency SOS SMS Now"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skicka SOS-SMS nu"
+          }
+        }
+      }
+    },
+    "Send SOS SMS to %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send SOS SMS to %@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skicka SOS-SMS till %@"
           }
         }
       }
@@ -1217,7 +1787,93 @@
         }
       }
     },
+    "Shake Phone Action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shake Phone Action"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skaka telefonen för att"
+          }
+        }
+      }
+    },
     "Show safe havens" : {
+
+    },
+    "Start %lld-Minute Safety Timer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start %lld-Minute Safety Timer"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta %lld-minuters trygghetstimer"
+          }
+        }
+      }
+    },
+    "Start 20-Minute Safety Timer" : {
+
+    },
+    "Start 20m Safety Timer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start 20m Safety Timer"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta 20 min trygghetstimer"
+          }
+        }
+      }
+    },
+    "Start safety timer" : {
+
+    },
+    "Start Safety Timer" : {
+
+    },
+    "Starts a 20-minute Safety Walk countdown timer with check-in reminders." : {
+
+    },
+    "Stop Recording" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop Recording"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stoppa inspelning"
+          }
+        }
+      }
+    },
+    "Stop voice memo" : {
+
+    },
+    "Stop voice memo preview" : {
 
     },
     "Streets appear clear or no alerts match your search." : {
@@ -1385,8 +2041,45 @@
     "Timing Delay" : {
 
     },
+    "Trigger Discreet Fake Call" : {
+
+    },
     "Triggers a realistic incoming call screen. When answered, a voice speaks through your earpiece so you appear to be in active conversation." : {
 
+    },
+    "Trusted Contact Name (e.g. Emma)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trusted Contact Name (e.g. Emma)"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kontaktens namn (t.ex. Emma)"
+          }
+        }
+      }
+    },
+    "Trusted Guardian Contact" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trusted Guardian Contact"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Betrodd nödkontakt"
+          }
+        }
+      }
     },
     "Trygg plats • Safe Haven" : {
 
@@ -1408,6 +2101,9 @@
         }
       }
     },
+    "Used to pre-fill an emergency SMS with your live Apple Maps coordinates if the timer expires." : {
+
+    },
     "Version" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1421,6 +2117,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Version"
+          }
+        }
+      }
+    },
+    "Voice" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voice"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Röst"
+          }
+        }
+      }
+    },
+    "Voice Memo Attached" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voice Memo Attached"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Röstmemon bifogat"
           }
         }
       }

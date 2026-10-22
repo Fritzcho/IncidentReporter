@@ -5,6 +5,7 @@ struct IncidentDetailSheet: View {
     let incident: Incident
     let userLocation: CLLocation?
     @Environment(\.dismiss) private var dismiss
+    @State private var voiceMemoService = VoiceMemoService.shared
 
     private var distanceText: String {
         guard let userLocation else { return "Unknown distance" }
@@ -34,10 +35,29 @@ struct IncidentDetailSheet: View {
                             if incident.isPoliceReport {
                                 PoliceBadge(size: .regular)
                             }
+
+                            if incident.hasVoiceMemo {
+                                VoiceMemoBadge(durationSeconds: incident.audioDurationSeconds)
+                            }
                         }
 
                         Text(incident.title)
                             .font(.title3.bold())
+                    }
+
+                    // Voice Memo Playback Card
+                    if let audioFileName = incident.audioFileName, !audioFileName.isEmpty {
+                        VoiceMemoPlayerCard(
+                            isPlaying: voiceMemoService.isPlaying,
+                            progress: voiceMemoService.playbackProgress,
+                            currentTimeText: VoiceMemoService.formatDuration(voiceMemoService.currentPlaybackTime),
+                            totalDurationText: VoiceMemoService.formatDuration(
+                                incident.audioDurationSeconds ?? voiceMemoService.totalPlaybackDuration
+                            ),
+                            errorMessage: voiceMemoService.errorMessage
+                        ) {
+                            voiceMemoService.togglePlayback(for: audioFileName)
+                        }
                     }
 
                     // Description / Details
@@ -89,9 +109,13 @@ struct IncidentDetailSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
+                        voiceMemoService.stopPlayback()
                         dismiss()
                     }
                 }
+            }
+            .onDisappear {
+                voiceMemoService.stopPlayback()
             }
         }
         .presentationDetents([.medium, .large])

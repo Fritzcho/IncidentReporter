@@ -258,7 +258,9 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = IncidentTracker;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to securely confirm your identity when disarming an active Safety Timer.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is needed to display your position on the map and alert you to nearby incidents.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to record optional hands-free voice memos when reporting safety incidents.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -297,7 +299,9 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = IncidentTracker;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to securely confirm your identity when disarming an active Safety Timer.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is needed to display your position on the map and alert you to nearby incidents.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone access is used to record optional hands-free voice memos when reporting safety incidents.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

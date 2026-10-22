@@ -41,4 +41,47 @@ final class NotificationService: Sendable {
             }
         }
     }
+
+    func scheduleSafetyTimerNotifications(durationSeconds: TimeInterval, destinationNote: String) {
+        cancelSafetyTimerNotifications()
+
+        let center = UNUserNotificationCenter.current()
+
+        // 1. Pre-expiry check-in warning (2 minutes before expiry, or halfway if shorter)
+        let warningOffset = durationSeconds > 180 ? (durationSeconds - 120) : max(5, durationSeconds * 0.5)
+        let warningContent = UNMutableNotificationContent()
+        warningContent.title = "Safety Check-in Reminder"
+        warningContent.body = destinationNote.isEmpty
+            ? "Your safety timer expires soon. Open IncidentTracker to confirm you are safe."
+            : "Arrived at \(destinationNote)? Open IncidentTracker to check in before your timer expires."
+        warningContent.sound = .default
+
+        let warningTrigger = UNTimeIntervalNotificationTrigger(timeInterval: warningOffset, repeats: false)
+        let warningRequest = UNNotificationRequest(
+            identifier: "safety-timer-warning",
+            content: warningContent,
+            trigger: warningTrigger
+        )
+        center.add(warningRequest)
+
+        // 2. Expiration escalation alert
+        let expiredContent = UNMutableNotificationContent()
+        expiredContent.title = "⚠️ Safety Timer Expired"
+        expiredContent.body = "You missed your safety check-in deadline. Tap immediately to disarm or send an emergency alert to your contact."
+        expiredContent.sound = .defaultCritical
+
+        let expiredTrigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, durationSeconds), repeats: false)
+        let expiredRequest = UNNotificationRequest(
+            identifier: "safety-timer-expired",
+            content: expiredContent,
+            trigger: expiredTrigger
+        )
+        center.add(expiredRequest)
+    }
+
+    func cancelSafetyTimerNotifications() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["safety-timer-warning", "safety-timer-expired"]
+        )
+    }
 }

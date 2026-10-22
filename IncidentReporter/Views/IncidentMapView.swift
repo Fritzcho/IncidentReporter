@@ -17,14 +17,18 @@ struct IncidentMapView: View {
     @State private var selectedSafeHaven: SafeHaven?
     @State private var isPresentingReportSheet = false
     @State private var isPresentingFakeCallLauncher = false
+    @State private var isPresentingSafetyTimerSheet = false
     @State private var isSatelliteStyle = false
     @State private var isSyncingPoliceEvents = false
     @State private var safeHavens: [SafeHaven] = SafeHavenService.shared.curatedHavens
     @State private var callService = FakeCallService.shared
+    @State private var safetyTimerService = SafetyTimerService.shared
+    @State private var quickActionCoordinator = QuickActionCoordinator.shared
 
     @AppStorage("showPoliceReports") private var showPoliceReports = true
     @AppStorage("showSafeHavens") private var showSafeHavens = true
     @AppStorage("incidentTimeFilter") private var timeFilter: IncidentTimeFilter = .twelveHours
+    @AppStorage("shakeTriggerAction") private var shakeTriggerActionRaw: String = ShakeTriggerAction.fakeCall.rawValue
 
     /// Incidents filtered according to user's police report preferences and time decay window
     private var displayedIncidents: [Incident] {
@@ -68,11 +72,31 @@ struct IncidentMapView: View {
         .sheet(isPresented: $isPresentingFakeCallLauncher) {
             FakeCallLauncherSheet()
         }
+        .sheet(isPresented: $isPresentingSafetyTimerSheet) {
+            SafetyTimerSheet(
+                userLocation: locationManager.userLocation
+            )
+        }
         .fullScreenCover(isPresented: Binding(
             get: { callService.isIncomingRinging || callService.isCallActive },
             set: { if !$0 { callService.endCall() } }
         )) {
             FakeCallView()
+        }
+        .onChange(of: quickActionCoordinator.shouldPresentReportSheet) { _, shouldPresent in
+            if shouldPresent {
+                quickActionCoordinator.shouldPresentReportSheet = false
+                isPresentingReportSheet = true
+            }
+        }
+        .onChange(of: quickActionCoordinator.shouldPresentSafetyTimerSheet) { _, shouldPresent in
+            if shouldPresent {
+                quickActionCoordinator.shouldPresentSafetyTimerSheet = false
+                isPresentingSafetyTimerSheet = true
+            }
+        }
+        .onDeviceShake {
+            handleShakeTrigger()
         }
         .task {
             locationManager.requestLocationAuthorization()
@@ -183,6 +207,26 @@ struct IncidentMapView: View {
 
     private var overlayControls: some View {
         VStack {
+            if safetyTimerService.isActive {
+                ActiveSafetyTimerBanner(
+                    formattedTime: safetyTimerService.formattedRemainingTime,
+                    destinationNote: safetyTimerService.destinationNote,
+                    isExpiringSoon: safetyTimerService.state == .expiringSoon,
+                    isEscalated: safetyTimerService.state == .escalated,
+                    onAddFiveMinutes: {
+                        safetyTimerService.addFiveMinutes()
+                    },
+                    onCheckInSafe: {
+                        safetyTimerService.disarmWithBiometrics()
+                    },
+                    onOpenDetails: {
+                        isPresentingSafetyTimerSheet = true
+                    }
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .padding(.top, 8)
+            }
+
             if let approaching = locationManager.approachingIncident {
                 ApproachingIncidentBanner(
                     incident: approaching,
@@ -223,6 +267,14 @@ struct IncidentMapView: View {
                 // Toggle Trygga platser (Safe Havens) button
                 SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
 
+                // Safety Walk Timer button
+                SafetyTimerButton(
+                    isActive: safetyTimerService.isActive,
+                    isEscalated: safetyTimerService.state == .escalated
+                ) {
+                    isPresentingSafetyTimerSheet = true
+                }
+
                 // Discreet Fake Call button
                 DiscreetCallButton {
                     isPresentingFakeCallLauncher = true
@@ -239,6 +291,30 @@ struct IncidentMapView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
             .padding(.horizontal, 14)
             .padding(.bottom, 24)
+        }
+    }
+
+    private func handleShakeTrigger() {
+        let action = ShakeTriggerAction(rawValue: shakeTriggerActionRaw) ?? .fakeCall
+        guard action != .disabled else { return }
+
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+
+        switch action {
+        case .disabled:
+            break
+        case .fakeCall:
+            let caller = UserDefaults.standard.string(forKey: "fakeCallerName") ?? "Emma"
+            callService.scheduleCall(delaySeconds: 0, caller: caller)
+        case .reportDanger:
+            isPresentingReportSheet = true
+        case .startSafetyTimer:
+            if !safetyTimerService.isActive {
+                safetyTimerService.startTimer(minutes: 20, destination: "Home")
+            } else {
+                isPresentingSafetyTimerSheet = true
+            }
         }
     }
 }

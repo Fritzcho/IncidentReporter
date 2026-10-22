@@ -15,6 +15,19 @@ final class Incident: Identifiable {
     var severityRaw: String = IncidentSeverity.medium.rawValue
     var timestamp: Date = Date()
     var reportedBy: String = "Anonymous"
+    var audioFileName: String? = nil
+    var audioDurationSeconds: Double? = nil
+
+    var hasVoiceMemo: Bool {
+        guard let audioFileName, !audioFileName.isEmpty else { return false }
+        return true
+    }
+
+    var audioFileURL: URL? {
+        guard let audioFileName, !audioFileName.isEmpty else { return nil }
+        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
+        return docs?.appendingPathComponent("VoiceMemos", isDirectory: true).appendingPathComponent(audioFileName)
+    }
 
     var category: IncidentCategory {
         get { IncidentCategory(rawValue: categoryRaw) ?? .harassment }
@@ -65,7 +78,9 @@ final class Incident: Identifiable {
         category: IncidentCategory = .harassment,
         severity: IncidentSeverity = .medium,
         timestamp: Date = Date(),
-        reportedBy: String = "Anonymous"
+        reportedBy: String = "Anonymous",
+        audioFileName: String? = nil,
+        audioDurationSeconds: Double? = nil
     ) {
         self.id = id
         self.externalId = externalId
@@ -78,5 +93,7 @@ final class Incident: Identifiable {
         self.severityRaw = severity.rawValue
         self.timestamp = timestamp
         self.reportedBy = reportedBy
+        self.audioFileName = audioFileName
+        self.audioDurationSeconds = audioDurationSeconds
     }
 }

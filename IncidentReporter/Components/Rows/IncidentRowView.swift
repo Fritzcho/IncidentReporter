@@ -14,6 +14,10 @@ struct IncidentRowView: View {
                         PoliceBadge(size: .compact)
                     }
 
+                    if incident.hasVoiceMemo {
+                        VoiceMemoBadge(durationSeconds: incident.audioDurationSeconds)
+                    }
+
                     Text(incident.title)
                         .font(.headline)
                         .foregroundStyle(.primary)

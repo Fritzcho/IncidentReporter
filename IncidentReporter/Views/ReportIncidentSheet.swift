@@ -19,6 +19,12 @@ struct ReportIncidentSheet: View {
     @State private var severity: IncidentSeverity = .medium
     @State private var details: String = ""
 
+    // Voice memo state
+    @State private var voiceMemoService = VoiceMemoService.shared
+    @State private var recordedAudioFileName: String? = nil
+    @State private var recordedAudioDuration: TimeInterval = 0
+    @State private var didSubmitReport: Bool = false
+
     // Location selection state
     @State private var locationMode: LocationSourceMode = .currentLocation
     @State private var addressInput: String = ""
@@ -38,9 +44,9 @@ struct ReportIncidentSheet: View {
     }
 
     private var canSubmit: Bool {
-        let hasTitle = !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let hasTitleOrVoice = !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || recordedAudioFileName != nil
         let hasLocation = activeCoordinate != nil
-        return hasTitle && hasLocation && !isGeocoding
+        return hasTitleOrVoice && hasLocation && !isGeocoding && !voiceMemoService.isRecording
     }
 
     var body: some View {
@@ -67,6 +73,30 @@ struct ReportIncidentSheet: View {
                 Section("Details & Advice for Others") {
                     TextField("Describe what happened, descriptions of individuals, or safer detours...", text: $details, axis: .vertical)
                         .lineLimit(3...6)
+
+                    VoiceMemoRecorderInputView(
+                        isRecording: voiceMemoService.isRecording,
+                        isPlaying: voiceMemoService.isPlaying,
+                        hasRecordedMemo: recordedAudioFileName != nil,
+                        durationText: VoiceMemoService.formatDuration(
+                            voiceMemoService.isRecording ? voiceMemoService.recordingDuration : recordedAudioDuration
+                        ),
+                        audioLevel: voiceMemoService.audioLevel,
+                        errorMessage: voiceMemoService.errorMessage,
+                        onToggleRecord: {
+                            handleToggleRecording()
+                        },
+                        onTogglePreviewPlay: {
+                            if let fileName = recordedAudioFileName {
+                                voiceMemoService.togglePlayback(for: fileName)
+                            }
+                        },
+                        onDeleteMemo: {
+                            voiceMemoService.deleteVoiceMemo(fileName: recordedAudioFileName)
+                            recordedAudioFileName = nil
+                            recordedAudioDuration = 0
+                        }
+                    )
                 }
 
                 Section("Incident Location") {
@@ -101,6 +131,7 @@ struct ReportIncidentSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
+                        cleanupUnsavedVoiceMemo()
                         dismiss()
                     }
                 }
@@ -115,6 +146,11 @@ struct ReportIncidentSheet: View {
             .task {
                 if let initialCoordinate {
                     await reverseGeocodeCurrentLocation(initialCoordinate)
+                }
+            }
+            .onDisappear {
+                if !didSubmitReport {
+                    cleanupUnsavedVoiceMemo()
                 }
             }
         }
@@ -166,19 +202,59 @@ struct ReportIncidentSheet: View {
         }
     }
 
+    private func handleToggleRecording() {
+        if voiceMemoService.isRecording {
+            let result = voiceMemoService.stopRecording()
+            recordedAudioFileName = result.fileName
+            recordedAudioDuration = max(1, result.duration)
+        } else {
+            Task {
+                if let oldFile = recordedAudioFileName {
+                    voiceMemoService.deleteVoiceMemo(fileName: oldFile)
+                }
+                let fileName = await voiceMemoService.startRecording()
+                recordedAudioFileName = fileName
+            }
+        }
+    }
+
+    private func cleanupUnsavedVoiceMemo() {
+        voiceMemoService.stopPlayback()
+        if voiceMemoService.isRecording {
+            _ = voiceMemoService.stopRecording()
+        }
+        if let fileName = recordedAudioFileName {
+            voiceMemoService.deleteVoiceMemo(fileName: fileName)
+            recordedAudioFileName = nil
+        }
+    }
+
     private func submitReport() {
         guard let coordinate = activeCoordinate else { return }
 
+        voiceMemoService.stopPlayback()
+        if voiceMemoService.isRecording {
+            let result = voiceMemoService.stopRecording()
+            recordedAudioFileName = result.fileName
+            recordedAudioDuration = max(1, result.duration)
+        }
+
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalTitle = trimmedTitle.isEmpty ? "Voice Alert — \(category.rawValue)" : trimmedTitle
+
         let newIncident = Incident(
-            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            title: finalTitle,
             details: details.trimmingCharacters(in: .whitespacesAndNewlines),
             latitude: coordinate.latitude,
             longitude: coordinate.longitude,
             category: category,
             severity: severity,
-            reportedBy: "Anonymous"
+            reportedBy: "Anonymous",
+            audioFileName: recordedAudioFileName,
+            audioDurationSeconds: recordedAudioFileName != nil ? recordedAudioDuration : nil
         )
 
+        didSubmitReport = true
         modelContext.insert(newIncident)
         dismiss()
     }

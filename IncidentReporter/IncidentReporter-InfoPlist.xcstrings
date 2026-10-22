@@ -37,6 +37,24 @@
         }
       }
     },
+    "NSFaceIDUsageDescription" : {
+      "comment" : "Privacy - Face ID Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Face ID is used to securely confirm your identity when disarming an active Safety Timer."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Face ID används för att säkert bekräfta din identitet när du stänger av en aktiv trygghetstimer."
+          }
+        }
+      }
+    },
     "NSLocationWhenInUseUsageDescription" : {
       "comment" : "Privacy - Location When In Use Usage Description",
       "extractionState" : "extracted_with_value",
@@ -51,6 +69,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Din plats behövs för att visa din position på kartan och varna dig för närliggande incidenter."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Privacy - Microphone Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Microphone access is used to record optional hands-free voice memos when reporting safety incidents."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofonåtkomst används för att spela in valfria röstmemon när du rapporterar säkerhetsincidenter."
           }
         }
       }
