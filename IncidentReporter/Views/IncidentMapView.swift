@@ -38,7 +38,9 @@ struct IncidentMapView: View {
 
     @AppStorage("showPoliceReports") private var showPoliceReports = true
     @AppStorage("showSafeHavens") private var showSafeHavens = true
-    @AppStorage("showNearestTransit") private var showTransit = true
+    /// Comma-separated `TransitMode` raw values the user has chosen to see on the map
+    @AppStorage("visibleTransitModes") private var visibleTransitModesRaw =
+        TransitMode.defaultVisibleModes.map(\.rawValue).joined(separator: ",")
     @AppStorage("incidentTimeFilter") private var timeFilter: IncidentTimeFilter = .twelveHours
     @AppStorage("shakeTriggerAction") private var shakeTriggerActionRaw: String = ShakeTriggerAction.fakeCall.rawValue
 
@@ -55,6 +57,24 @@ struct IncidentMapView: View {
         }
     }
 
+    private var visibleTransitModes: Set<TransitMode> {
+        Set(visibleTransitModesRaw.split(separator: ",").compactMap { TransitMode(rawValue: String($0)) })
+    }
+
+    private var visibleTransitModesBinding: Binding<Set<TransitMode>> {
+        Binding(
+            get: { visibleTransitModes },
+            set: { modes in
+                visibleTransitModesRaw = TransitMode.allCases
+                    .filter { modes.contains($0) }
+                    .map(\.rawValue)
+                    .joined(separator: ",")
+            }
+        )
+    }
+
+    private var showTransit: Bool { !visibleTransitModes.isEmpty }
+
     /// Reference point for the nearest-stop search: the user's position, or Central Stockholm
     private var transitReferenceLocation: CLLocation {
         locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
@@ -63,7 +83,7 @@ struct IncidentMapView: View {
     /// Changes when the user moves roughly 200 m, so nearest stops are re-resolved without re-querying on every GPS fix
     private var transitSearchKey: String {
         let coordinate = transitReferenceLocation.coordinate
-        return "\(showTransit)-\(Int(coordinate.latitude * 500))-\(Int(coordinate.longitude * 250))"
+        return "\(visibleTransitModesRaw)-\(Int(coordinate.latitude * 500))-\(Int(coordinate.longitude * 250))"
     }
 
     /// Stop markers are only drawn when the map shows roughly 3 km or less, to keep the map readable
@@ -73,7 +93,7 @@ struct IncidentMapView: View {
     private var visibleStopsKey: String {
         guard showTransit, let region = visibleRegion else { return "hidden" }
         guard region.span.latitudeDelta <= Self.stopMarkerMaxSpan else { return "zoomed-out" }
-        return "\(Int(region.center.latitude * 2000))-\(Int(region.center.longitude * 1000))-\(Int(region.span.latitudeDelta * 2000))"
+        return "\(visibleTransitModesRaw)-\(Int(region.center.latitude * 2000))-\(Int(region.center.longitude * 1000))-\(Int(region.span.latitudeDelta * 2000))"
     }
 
     /// Visible stop markers, minus stops that already have a nearest-stop pin
@@ -91,6 +111,7 @@ struct IncidentMapView: View {
 
             overlayControls
         }
+
         .sheet(item: $selectedIncident) { incident in
             IncidentDetailSheet(
                 incident: incident,
@@ -230,16 +251,18 @@ struct IncidentMapView: View {
 
             // Every SL stop in view when zoomed in; tap for departures
             ForEach(stopMarkers) { stop in
-                Annotation(stop.name, coordinate: stop.coordinate) {
-                    BusStopMarkerIcon(name: stop.name, isLoading: loadingStopID == stop.id)
-                        .onTapGesture {
-                            Task { await openDepartures(for: stop) }
-                        }
+                if let mode = stop.primaryMode(in: visibleTransitModes) {
+                    Annotation(stop.name, coordinate: stop.coordinate) {
+                        TransitStopMarkerIcon(name: stop.name, mode: mode, isLoading: loadingStopID == stop.id)
+                            .onTapGesture {
+                                Task { await openDepartures(for: stop) }
+                            }
+                    }
+                    .annotationTitles(.hidden)
                 }
-                .annotationTitles(.hidden)
             }
 
-            // Nearest subway, commuter train & bus stops with live departures
+            // Nearest stop for each chosen transit type, with live departures
             if showTransit {
                 ForEach(transitStops) { stop in
                     Annotation(stop.name, coordinate: stop.coordinate) {
@@ -285,14 +308,15 @@ struct IncidentMapView: View {
         }
     }
 
-    /// Resolves the nearest subway station, commuter train station and bus stop, then keeps their departures fresh every minute.
+    /// Resolves the nearest stop for each chosen transit type, then keeps their departures fresh every minute.
     private func refreshTransitStops() async {
         guard showTransit else {
             transitStops = []
             return
         }
         isLoadingTransit = transitStops.isEmpty
-        if let stops = try? await SLTransitService.shared.nearestStops(to: transitReferenceLocation) {
+        let modes = TransitMode.allCases.filter { visibleTransitModes.contains($0) }
+        if let stops = try? await SLTransitService.shared.nearestStops(to: transitReferenceLocation, modes: modes) {
             transitStops = stops
         }
         isLoadingTransit = false
@@ -315,7 +339,7 @@ struct IncidentMapView: View {
             visibleStops = []
             return
         }
-        if let stops = try? await SLTransitService.shared.stops(in: region) {
+        if let stops = try? await SLTransitService.shared.stops(in: region, modes: visibleTransitModes) {
             visibleStops = stops
         }
     }
@@ -391,29 +415,23 @@ struct IncidentMapView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 12) {
-                // Sync Swedish Police events button (available when police reports are enabled)
-                if showPoliceReports {
-                    PoliceSyncButton(isSyncing: isSyncingPoliceEvents) {
-                        Task {
-                            isSyncingPoliceEvents = true
-                            let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
-                            await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference, force: true)
-                            try? await Task.sleep(nanoseconds: 600_000_000)
-                            isSyncingPoliceEvents = false
-                        }
+                // Everything the map can show: police reports, safe havens, transit types, time range
+                MapLayersMenuButton(
+                    showPoliceReports: $showPoliceReports,
+                    showSafeHavens: $showSafeHavens,
+                    visibleTransitModes: visibleTransitModesBinding,
+                    timeFilter: $timeFilter,
+                    isSyncingPolice: isSyncingPoliceEvents,
+                    isLoadingTransit: isLoadingTransit
+                ) {
+                    Task {
+                        isSyncingPoliceEvents = true
+                        let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
+                        await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference, force: true)
+                        try? await Task.sleep(nanoseconds: 600_000_000)
+                        isSyncingPoliceEvents = false
                     }
-                    .transition(.scale.combined(with: .opacity))
                 }
-
-                // Toggle Swedish Police API reports button
-                PoliceFilterButton(showPoliceReports: $showPoliceReports)
-                
-
-                // Toggle Trygga platser (Safe Havens) button
-                SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
-
-                // Toggle nearest subway, commuter train & bus stops
-                TransitFilterButton(showTransit: $showTransit, isLoading: isLoadingTransit)
 
                 // Look up departures at any SL stop
                 TransitSearchButton {
@@ -425,6 +443,7 @@ struct IncidentMapView: View {
                     isPresentingTaxiLauncher = true
                 }
 
+                // Safety & security buttons, closest to the thumb
                 // Safety Walk Timer button
                 SafetyTimerButton(
                     isActive: safetyTimerService.isActive,
@@ -437,10 +456,6 @@ struct IncidentMapView: View {
                 DiscreetCallButton {
                     isPresentingFakeCallLauncher = true
                 }
-
-                // Filter incidents by recency / time decay
-                TimeFilterMenuButton(timeFilter: $timeFilter)
-
 
                 ReportDangerButton {
                     isPresentingReportSheet = true

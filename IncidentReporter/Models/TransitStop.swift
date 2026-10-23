@@ -15,9 +15,21 @@ nonisolated enum TransitMode: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    /// Modes the map resolves a nearest stop for automatically. Trams and boats are still shown
-    /// when the user looks up a specific stop.
-    static let nearbyModes: [TransitMode] = [.metro, .train, .bus]
+    /// Modes shown on the map by default. Trams and boats can be turned on from the map layers menu,
+    /// and are always shown when the user looks up a specific stop.
+    static let defaultVisibleModes: [TransitMode] = [.metro, .train, .bus]
+
+    /// Maps an SL stop area type (from the stop-points register) to the mode it serves.
+    init?(stopAreaType: String) {
+        switch stopAreaType {
+        case "METROSTN": self = .metro
+        case "RAILWSTN": self = .train
+        case "TRAMSTN": self = .tram
+        case "BUSTERM": self = .bus
+        case "SHIPBER", "FERRYBER": self = .ship
+        default: return nil
+        }
+    }
 
     var title: LocalizedStringKey {
         switch self {
@@ -162,9 +174,18 @@ nonisolated struct TransitStopSummary: Identifiable, Hashable, Sendable {
     /// Disambiguating area for stops that share a name (e.g. "Runmarö").
     let note: String?
     let coordinate: CLLocationCoordinate2D
+    /// Modes this stop serves according to SL's stop register, in priority order. Empty when unknown.
+    var modes: [TransitMode] = []
 
     func distance(from location: CLLocation?) -> CLLocationDistance? {
         location?.distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+    }
+
+    /// The first of `visible` this stop serves, used to pick its marker icon; nil if it serves none of them.
+    /// A stop whose modes are unknown is treated as a bus stop.
+    func primaryMode(in visible: Set<TransitMode>) -> TransitMode? {
+        guard !modes.isEmpty else { return visible.contains(.bus) ? .bus : nil }
+        return modes.first { visible.contains($0) }
     }
 
     static func == (lhs: TransitStopSummary, rhs: TransitStopSummary) -> Bool {

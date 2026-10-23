@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// A small, low-emphasis map marker for an SL stop. Shown for every stop in view when zoomed in;
-/// tapping it opens the stop's departures.
-struct BusStopMarkerIcon: View {
+/// A small, low-emphasis map marker for an SL stop, showing the stop's transit type.
+/// Shown for every stop in view when zoomed in; tapping it opens the stop's departures.
+struct TransitStopMarkerIcon: View {
     let name: String
+    let mode: TransitMode
     var isLoading: Bool = false
 
     var body: some View {
@@ -17,27 +18,29 @@ struct BusStopMarkerIcon: View {
                 ProgressView()
                     .controlSize(.mini)
             } else {
-                Image(systemName: "bus.fill")
+                Image(systemName: mode.systemImage)
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 17, height: 17)
-                    .background(Color.red.gradient, in: Circle())
+                    .background(mode.color.gradient, in: Circle())
             }
         }
         // Keep a comfortable tap target around the small glyph
         .frame(width: 34, height: 34)
         .contentShape(Circle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Stop \(name)"))
+        .accessibilityLabel(Text("\(Text(mode.title)) stop \(name)"))
         .accessibilityHint(Text("Shows departures"))
         .accessibilityAddTraits(.isButton)
     }
 }
 
 #Preview {
-    HStack(spacing: 20) {
-        BusStopMarkerIcon(name: "Fatbursgatan")
-        BusStopMarkerIcon(name: "Fatbursgatan", isLoading: true)
+    HStack(spacing: 12) {
+        ForEach(TransitMode.allCases) { mode in
+            TransitStopMarkerIcon(name: "Slussen", mode: mode)
+        }
+        TransitStopMarkerIcon(name: "Fatbursgatan", mode: .bus, isLoading: true)
     }
     .padding()
     .background(Color.gray.opacity(0.2))
