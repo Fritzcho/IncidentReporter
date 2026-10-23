@@ -37,11 +37,14 @@ actor SLTransitService {
 
     // MARK: - Public API
 
-    /// Returns the nearest stop for each of `TransitMode.nearbyModes` (subway, commuter train, bus).
+    /// Returns the nearest stop for each of `modes`.
     /// When one stop is nearest for several modes, it is returned once with all of them.
-    func nearestStops(to location: CLLocation) async throws -> [TransitStop] {
+    func nearestStops(to location: CLLocation, modes wanted: [TransitMode]) async throws -> [TransitStop] {
+        guard !wanted.isEmpty else { return [] }
         let sites = try await loadSites()
         let candidates = sites
+            // Only query stops that serve a wanted mode (or whose modes are unknown)
+            .filter { $0.modes.isEmpty || !$0.modes.isDisjoint(with: wanted) }
             .map { ($0, location.distance(from: CLLocation(latitude: $0.lat, longitude: $0.lon))) }
             .filter { $0.1 <= searchRadius }
             .sorted { $0.1 < $1.1 }
@@ -57,19 +60,19 @@ actor SLTransitService {
 
             for site in batch {
                 guard let departures = results[site.id] else { continue }
-                for mode in TransitMode.nearbyModes where nearest[mode] == nil {
+                for mode in wanted where nearest[mode] == nil {
                     if departures.contains(where: { $0.mode == mode }) {
                         nearest[mode] = (site, departures)
                     }
                 }
             }
-            if nearest.count == TransitMode.nearbyModes.count { break }
+            if nearest.count == wanted.count { break }
         }
 
         var stops: [TransitStop] = []
-        for mode in TransitMode.nearbyModes {
+        for mode in wanted {
             guard let match = nearest[mode] else { continue }
-            let modes = TransitMode.nearbyModes.filter { nearest[$0]?.site.id == match.site.id }
+            let modes = wanted.filter { nearest[$0]?.site.id == match.site.id }
             guard !stops.contains(where: { $0.id == match.site.id }) else { continue }
             stops.append(makeStop(site: match.site, modes: modes, departures: match.departures))
         }
@@ -108,8 +111,10 @@ actor SLTransitService {
         return ranked.prefix(limit).map(\.summary)
     }
 
-    /// SL stops inside a map region, nearest the region's centre first (used to draw stop markers when zoomed in).
-    func stops(in region: MKCoordinateRegion, limit: Int = 150) async throws -> [TransitStopSummary] {
+    /// SL stops inside a map region that serve one of `modes`, nearest the region's centre first
+    /// (used to draw stop markers when zoomed in).
+    func stops(in region: MKCoordinateRegion, modes wanted: Set<TransitMode>, limit: Int = 150) async throws -> [TransitStopSummary] {
+        guard !wanted.isEmpty else { return [] }
         let sites = try await loadSites()
         let center = region.center
         let latRange = (center.latitude - region.span.latitudeDelta / 2)...(center.latitude + region.span.latitudeDelta / 2)
@@ -117,6 +122,7 @@ actor SLTransitService {
         let centerLocation = CLLocation(latitude: center.latitude, longitude: center.longitude)
         return sites
             .filter { latRange.contains($0.lat) && lonRange.contains($0.lon) }
+            .filter { $0.summary.primaryMode(in: wanted) != nil }
             .sorted {
                 centerLocation.distance(from: CLLocation(latitude: $0.lat, longitude: $0.lon))
                     < centerLocation.distance(from: CLLocation(latitude: $1.lat, longitude: $1.lon))
@@ -172,10 +178,34 @@ actor SLTransitService {
 
     private func loadSites() async throws -> [SLSite] {
         if let cachedSites { return cachedSites }
-        let (data, _) = try await session.data(from: baseURL.appending(path: "sites"))
-        let sites = try JSONDecoder().decode([SLSitePayload].self, from: data).compactMap(\.site)
+        var components = URLComponents(url: baseURL.appending(path: "sites"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "expand", value: "true")]
+        async let siteData = session.data(from: components.url!)
+        async let areaTypes = loadStopAreaTypes()
+
+        let payloads = try JSONDecoder().decode([SLSitePayload].self, from: try await siteData.0)
+        let types = await areaTypes
+        let sites = payloads.compactMap { payload -> SLSite? in
+            let modes = Set((payload.stopAreas ?? []).compactMap { types[$0] })
+            return payload.site(modes: modes)
+        }
         cachedSites = sites
         return sites
+    }
+
+    /// Stop area id → mode, from SL's stop-points register (~700 KB compressed, loaded once).
+    /// On failure stops just have unknown modes, so the map still works.
+    private func loadStopAreaTypes() async -> [Int: TransitMode] {
+        guard let (data, _) = try? await session.data(from: baseURL.appending(path: "stop-points")),
+              let points = try? JSONDecoder().decode([SLStopPoint].self, from: data) else {
+            return [:]
+        }
+        var types: [Int: TransitMode] = [:]
+        for point in points {
+            guard let area = point.stopArea, let mode = TransitMode(stopAreaType: area.type) else { continue }
+            types[area.id] = mode
+        }
+        return types
     }
 
     private func fetchDepartures(for sites: [SLSite]) async -> [Int: [TransitDeparture]] {
@@ -247,9 +277,17 @@ private nonisolated struct SLSite: Sendable {
     let note: String?
     let lat: Double
     let lon: Double
+    /// Modes served, from the stop register; empty when unknown
+    let modes: Set<TransitMode>
 
     var summary: TransitStopSummary {
-        TransitStopSummary(id: id, name: name, note: note, coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon))
+        TransitStopSummary(
+            id: id,
+            name: name,
+            note: note,
+            coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon),
+            modes: TransitMode.allCases.filter { modes.contains($0) }
+        )
     }
 }
 
@@ -260,10 +298,29 @@ private nonisolated struct SLSitePayload: Decodable, Sendable {
     let note: String?
     let lat: Double?
     let lon: Double?
+    let stopAreas: [Int]?
 
-    var site: SLSite? {
+    enum CodingKeys: String, CodingKey {
+        case id, name, note, lat, lon
+        case stopAreas = "stop_areas"
+    }
+
+    func site(modes: Set<TransitMode>) -> SLSite? {
         guard let lat, let lon else { return nil }
-        return SLSite(id: id, name: name, note: note, lat: lat, lon: lon)
+        return SLSite(id: id, name: name, note: note, lat: lat, lon: lon, modes: modes)
+    }
+}
+
+private nonisolated struct SLStopPoint: Decodable, Sendable {
+    struct StopArea: Decodable, Sendable {
+        let id: Int
+        let type: String
+    }
+
+    let stopArea: StopArea?
+
+    enum CodingKeys: String, CodingKey {
+        case stopArea = "stop_area"
     }
 }
 
