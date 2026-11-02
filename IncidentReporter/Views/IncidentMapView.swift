@@ -217,72 +217,133 @@ struct IncidentMapView: View {
 
     // MARK: - Subviews
     private var mapLayer: some View {
-        Map(position: $cameraPosition, selection: $selectedMapFeature) {
-            UserAnnotation()
+        MapReader { proxy in
+            Map(position: $cameraPosition, selection: $selectedMapFeature) {
+                UserAnnotation()
 
-            // Danger & incident annotations
-            ForEach(displayedIncidents) { incident in
-                Annotation(incident.title, coordinate: incident.coordinate) {
-                    annotationView(for: incident)
-                }
-            }
-
-            // Subway and commuter train stops in view when zoomed in; tap for details
-            ForEach(stopMarkers) { stop in
-                if let mode = stop.primaryMode(in: visibleTransitModes) {
-                    Annotation(stop.name, coordinate: stop.coordinate) {
-                        TransitStopMarkerIcon(name: stop.name, mode: mode, isLoading: loadingStopID == stop.id)
-                            .onTapGesture {
-                                Task { await openDepartures(for: stop) }
+                // Danger & incident annotations
+                ForEach(displayedIncidents) { incident in
+                    Annotation(incident.title, coordinate: incident.coordinate) {
+                        annotationView(for: incident) {
+                            handlePinTap(at: incident.coordinate, proxy: proxy) {
+                                selectedIncident = incident
                             }
+                        }
                     }
-                    .annotationTitles(.hidden)
                 }
-            }
 
-            // Nearest subway and commuter train stop, with live departures
-            if showTransit {
-                ForEach(transitStops) { stop in
-                    Annotation(stop.name, coordinate: stop.coordinate) {
-                        TransitStopAnnotationView(
-                            stop: stop,
-                            isSelected: selectedTransitStop?.id == stop.id
-                        )
-                        .onTapGesture {
-                            selectedTransitStop = stop
+                // Subway and commuter train stops in view when zoomed in; tap for details
+                ForEach(stopMarkers) { stop in
+                    if let mode = stop.primaryMode(in: visibleTransitModes) {
+                        Annotation(stop.name, coordinate: stop.coordinate) {
+                            TransitStopMarkerIcon(name: stop.name, mode: mode, isLoading: loadingStopID == stop.id)
+                                .onTapGesture {
+                                    handlePinTap(at: stop.coordinate, proxy: proxy) {
+                                        Task { await openDepartures(for: stop) }
+                                    }
+                                }
+                        }
+                        .annotationTitles(.hidden)
+                    }
+                }
+
+                // Nearest subway and commuter train stop, with live departures
+                if showTransit {
+                    ForEach(transitStops) { stop in
+                        Annotation(stop.name, coordinate: stop.coordinate) {
+                            TransitStopAnnotationView(
+                                stop: stop,
+                                isSelected: selectedTransitStop?.id == stop.id
+                            )
+                            .onTapGesture {
+                                handlePinTap(at: stop.coordinate, proxy: proxy) {
+                                    selectedTransitStop = stop
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Trygga platser / Safe havens annotations
+                if showSafeHavens {
+                    ForEach(safeHavens) { haven in
+                        Annotation(haven.name, coordinate: haven.coordinate) {
+                            SafeHavenAnnotationView(
+                                haven: haven,
+                                isSelected: selectedSafeHaven?.id == haven.id
+                            )
+                            .onTapGesture {
+                                handlePinTap(at: haven.coordinate, proxy: proxy) {
+                                    selectedSafeHaven = haven
+                                }
+                            }
                         }
                     }
                 }
             }
-
-            // Trygga platser / Safe havens annotations
-            if showSafeHavens {
-                ForEach(safeHavens) { haven in
-                    Annotation(haven.name, coordinate: haven.coordinate) {
-                        SafeHavenAnnotationView(
-                            haven: haven,
-                            isSelected: selectedSafeHaven?.id == haven.id
-                        )
-                        .onTapGesture {
-                            selectedSafeHaven = haven
-                        }
-                    }
-                }
+            .mapStyle(
+                isSatelliteStyle
+                    ? .hybrid(elevation: .realistic, pointsOfInterest: transitOnlyPOIFilter)
+                    : .standard(elevation: .realistic, pointsOfInterest: transitOnlyPOIFilter)
+            )
+            .onMapCameraChange(frequency: .onEnd) { context in
+                visibleRegion = context.region
+            }
+            .mapControls {
+                MapUserLocationButton()
+                MapCompass()
+                MapScaleView()
+                MapPitchToggle()
             }
         }
-        .mapStyle(
-            isSatelliteStyle
-                ? .hybrid(elevation: .realistic, pointsOfInterest: transitOnlyPOIFilter)
-                : .standard(elevation: .realistic, pointsOfInterest: transitOnlyPOIFilter)
+    }
+
+    // MARK: - Overlapping pins
+
+    /// Pins whose centres are closer than this on screen overlap enough to be hard to tap apart
+    private static let pinOverlapDistance: CGFloat = 36
+    /// Closest the overlap zoom goes (roughly 150 m across); past this, the tapped pin just opens
+    private static let minimumOverlapZoomSpan: CLLocationDegrees = 0.0015
+
+    /// Every pin currently drawn on the map
+    private var pinCoordinates: [CLLocationCoordinate2D] {
+        var coordinates = displayedIncidents.map(\.coordinate)
+        coordinates += stopMarkers.filter { $0.primaryMode(in: visibleTransitModes) != nil }.map(\.coordinate)
+        if showTransit {
+            coordinates += transitStops.map(\.coordinate)
+        }
+        if showSafeHavens {
+            coordinates += safeHavens.map(\.coordinate)
+        }
+        return coordinates
+    }
+
+    /// Opens a tapped pin, unless other pins overlap it on screen: then zooms in on it first,
+    /// so the user can pick the one they meant.
+    private func handlePinTap(at coordinate: CLLocationCoordinate2D, proxy: MapProxy, open: () -> Void) {
+        guard let region = visibleRegion,
+              region.span.latitudeDelta > Self.minimumOverlapZoomSpan,
+              let tapped = proxy.convert(coordinate, to: .local) else {
+            open()
+            return
+        }
+
+        let overlapping = pinCoordinates.filter { other in
+            guard let point = proxy.convert(other, to: .local) else { return false }
+            return hypot(point.x - tapped.x, point.y - tapped.y) < Self.pinOverlapDistance
+        }
+        // The tapped pin is in the list itself, so overlap means at least two
+        guard overlapping.count > 1 else {
+            open()
+            return
+        }
+
+        let span = MKCoordinateSpan(
+            latitudeDelta: max(region.span.latitudeDelta / 4, Self.minimumOverlapZoomSpan),
+            longitudeDelta: max(region.span.longitudeDelta / 4, Self.minimumOverlapZoomSpan)
         )
-        .onMapCameraChange(frequency: .onEnd) { context in
-            visibleRegion = context.region
-        }
-        .mapControls {
-            MapUserLocationButton()
-            MapCompass()
-            MapScaleView()
-            MapPitchToggle()
+        withAnimation(.easeInOut(duration: 0.4)) {
+            cameraPosition = .region(MKCoordinateRegion(center: coordinate, span: span))
         }
     }
 
@@ -343,14 +404,12 @@ struct IncidentMapView: View {
         selectedTransitStop = stop
     }
 
-    private func annotationView(for incident: Incident) -> some View {
+    private func annotationView(for incident: Incident, onTap: @escaping () -> Void) -> some View {
         IncidentAnnotationView(
             incident: incident,
             isSelected: selectedIncident?.id == incident.id
         )
-        .onTapGesture {
-            selectedIncident = incident
-        }
+        .onTapGesture(perform: onTap)
     }
 
     private var overlayControls: some View {

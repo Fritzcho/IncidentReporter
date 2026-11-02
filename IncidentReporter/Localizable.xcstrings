@@ -1139,6 +1139,9 @@
         }
       }
     },
+    "Incident recency" : {
+
+    },
     "Incident Recency" : {
 
     },
@@ -1175,6 +1178,9 @@
           }
         }
       }
+    },
+    "Incidents from the last %@" : {
+
     },
     "Includes voice memo" : {
 
@@ -1249,6 +1255,9 @@
       }
     },
     "Map Alerts & Freshness" : {
+
+    },
+    "Map layers" : {
 
     },
     "Message" : {
@@ -1503,6 +1512,9 @@
         }
       }
     },
+    "Police reports" : {
+
+    },
     "POLISEN" : {
 
     },
@@ -1695,6 +1707,9 @@
 
     },
     "Running" : {
+
+    },
+    "Safe havens" : {
 
     },
     "Safety & Quick Triggers" : {
@@ -1944,6 +1959,9 @@
     "Show nearest transit stops" : {
 
     },
+    "Show on map" : {
+
+    },
     "Show safe havens" : {
 
     },
@@ -2147,6 +2165,9 @@
         }
       }
     },
+    "Syncing police events…" : {
+
+    },
     "Taxi companies" : {
 
     },
@@ -2200,6 +2221,9 @@
 
     },
     "Tram & light rail" : {
+
+    },
+    "Transit stops" : {
 
     },
     "Trigger Discreet Fake Call" : {
