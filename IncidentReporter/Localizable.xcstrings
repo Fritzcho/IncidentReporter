@@ -71,6 +71,16 @@
     "%@ ago" : {
 
     },
+    "%@ stop %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ stop %2$@"
+          }
+        }
+      }
+    },
     "%@, %@" : {
       "localizations" : {
         "en" : {
@@ -1144,6 +1154,9 @@
         }
       }
     },
+    "Incident recency" : {
+
+    },
     "Incident Recency" : {
 
     },
@@ -1180,6 +1193,9 @@
           }
         }
       }
+    },
+    "Incidents from the last %@" : {
+
     },
     "Includes voice memo" : {
 
@@ -1254,6 +1270,9 @@
       }
     },
     "Map Alerts & Freshness" : {
+
+    },
+    "Map layers" : {
 
     },
     "Message" : {
@@ -1511,6 +1530,9 @@
         }
       }
     },
+    "Police reports" : {
+
+    },
     "POLISEN" : {
 
     },
@@ -1703,6 +1725,9 @@
 
     },
     "Running" : {
+
+    },
+    "Safe havens" : {
 
     },
     "Safety & Quick Triggers" : {
@@ -1958,6 +1983,9 @@
     "Show nearest transit stops" : {
 
     },
+    "Show on map" : {
+
+    },
     "Show safe havens" : {
 
     },
@@ -2011,9 +2039,6 @@
 
     },
     "Starts a 20-minute Safety Walk countdown timer with check-in reminders." : {
-
-    },
-    "Stop %@" : {
 
     },
     "Stop Recording" : {
@@ -2167,6 +2192,9 @@
         }
       }
     },
+    "Syncing police events…" : {
+
+    },
     "Taxi companies" : {
 
     },
@@ -2220,6 +2248,9 @@
 
     },
     "Tram & light rail" : {
+
+    },
+    "Transit stops" : {
 
     },
     "Trigger Discreet Fake Call" : {
