@@ -44,11 +44,11 @@ enum IncidentCategory: String, Codable, CaseIterable, Identifiable, Sendable {
         case .transitHazard:
             return .yellow
         case .poorLighting:
-            return .indigo
+            return Color(red: 0.35, green: 0.35, blue: 0.45)
         case .drinkSpiking:
             return .pink
         case .suspiciousPresence:
-            return .teal
+            return .brown
         case .other:
             return .gray
         }

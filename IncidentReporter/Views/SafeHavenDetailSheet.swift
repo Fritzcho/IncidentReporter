@@ -21,28 +21,22 @@ struct SafeHavenDetailSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                // Header Card
-                VStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(haven.category.color.opacity(0.15))
-                            .frame(width: 72, height: 72)
-
-                        Image(systemName: haven.category.systemImage)
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundStyle(haven.category.color)
-                    }
-
+            VStack(spacing: 16) {
+                // Header Card (icon hidden in slide-up sheet to prevent collision with title)
+                VStack(spacing: 8) {
                     VStack(spacing: 4) {
                         Text(haven.name)
                             .font(.title2.bold())
                             .multilineTextAlignment(.center)
+                            .lineLimit(nil)
+                            .fixedSize(horizontal: false, vertical: true)
 
                         Text(haven.category.rawValue)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal)
 
                     HStack(spacing: 6) {
                         Image(systemName: "figure.walk")
@@ -55,7 +49,7 @@ struct SafeHavenDetailSheet: View {
                     .background(Color.green.opacity(0.12))
                     .clipShape(Capsule())
                 }
-                .padding(.top, 10)
+                .padding(.top, 12)
 
                 // Info Rows
                 VStack(spacing: 14) {
