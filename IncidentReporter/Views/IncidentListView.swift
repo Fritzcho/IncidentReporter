@@ -15,7 +15,6 @@ struct IncidentListView: View {
     @State private var searchText = ""
     @State private var selectedIncident: Incident?
     @State private var selectedTab: IncidentSourceTab = .community
-    @State private var isPresentingSettings = false
 
     private var tabFilteredIncidents: [Incident] {
         switch selectedTab {
@@ -79,26 +78,13 @@ struct IncidentListView: View {
                 await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference, force: true)
             }
             .navigationTitle("Safety Alerts")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        isPresentingSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                    }
-                    .accessibilityLabel("Settings")
-                }
-            }
             .onAppear {
-                if selectedIncident == nil && !isPresentingSettings {
+                if selectedIncident == nil {
                     selectedTab = .community
                 }
             }
             .sheet(item: $selectedIncident) { incident in
                 IncidentDetailSheet(incident: incident, userLocation: nil)
-            }
-            .sheet(isPresented: $isPresentingSettings) {
-                SettingsView()
             }
         }
     }

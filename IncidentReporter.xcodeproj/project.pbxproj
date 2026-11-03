@@ -259,6 +259,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "IncidentReporter-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = IncidentTracker;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to securely confirm your identity when disarming an active Safety Timer.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is needed to display your position on the map and alert you to nearby incidents.";
@@ -300,6 +301,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "IncidentReporter-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = IncidentTracker;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Face ID is used to securely confirm your identity when disarming an active Safety Timer.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is needed to display your position on the map and alert you to nearby incidents.";

@@ -15,6 +15,11 @@ struct ContentView: View {
                 .tabItem {
                     Label("Incidents", systemImage: "list.bullet.rectangle.portrait")
                 }
+
+            MyPageView()
+                .tabItem {
+                    Label("My page", systemImage: "person.crop.circle")
+                }
         }
         .environment(\.locale, Locale(identifier: appLanguage))
     }

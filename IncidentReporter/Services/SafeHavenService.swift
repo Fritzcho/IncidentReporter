@@ -67,56 +67,78 @@ final class SafeHavenService: Sendable {
         )
     ]
 
-    /// Dynamic search around user coordinate using MapKit local search
+    /// Safe havens around a coordinate: the curated list, OpenStreetMap (with opening hours) and
+    /// Apple Maps searches for staffed chains, merged so each place appears once.
     func fetchHavens(around coordinate: CLLocationCoordinate2D) async -> [SafeHaven] {
-        var results = curatedHavens
-        let searchQueries = ["Pharmacy", "Police", "7-Eleven"]
+        async let fromOSM = OSMSafeHavenService.shared.havens(around: coordinate)
+        async let fromAppleMaps = appleMapsHavens(around: coordinate)
+        return Self.merged(curatedHavens + (await fromOSM) + (await fromAppleMaps))
+    }
 
-        for query in searchQueries {
-            let request = MKLocalSearch.Request()
-            request.naturalLanguageQuery = query
-            request.region = MKCoordinateRegion(
-                center: coordinate,
-                latitudinalMeters: 4000,
-                longitudinalMeters: 4000
-            )
-
-            let search = MKLocalSearch(request: request)
-            if let response = try? await search.start() {
-                for item in response.mapItems.prefix(2) {
-                    let cat: SafeHavenCategory
-                    if query == "Police" {
-                        cat = .policeStation
-                    } else if query == "Pharmacy" {
-                        cat = .pharmacy
-                    } else {
-                        cat = .convenienceStore
-                    }
-
-                    let itemCoord = item.placemark.coordinate
-                    let itemLoc = CLLocation(latitude: itemCoord.latitude, longitude: itemCoord.longitude)
-
-                    // Avoid duplicate pins within 100m
-                    let isDuplicate = results.contains { existing in
-                        let existingLoc = CLLocation(latitude: existing.coordinate.latitude, longitude: existing.coordinate.longitude)
-                        return existingLoc.distance(from: itemLoc) < 100
-                    }
-
-                    if !isDuplicate, let name = item.name {
-                        let haven = SafeHaven(
+    /// Searches for police, pharmacies and chains that are usually staffed late. Apple doesn't give
+    /// opening hours here, so these are shown as "hours not verified".
+    private func appleMapsHavens(around coordinate: CLLocationCoordinate2D) async -> [SafeHaven] {
+        let searches: [(query: String, category: SafeHavenCategory)] = [
+            ("Police", .policeStation),
+            ("Pharmacy", .pharmacy),
+            ("Akutmottagning", .hospital),
+            ("7-Eleven", .convenienceStore),
+            ("Pressbyrån", .convenienceStore),
+            ("Circle K", .convenienceStore),
+            ("Hotel", .hotel)
+        ]
+        return await withTaskGroup(of: [SafeHaven].self) { group in
+            for search in searches {
+                group.addTask {
+                    let request = MKLocalSearch.Request()
+                    request.naturalLanguageQuery = search.query
+                    request.resultTypes = .pointOfInterest
+                    request.region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 4000, longitudinalMeters: 4000)
+                    guard let response = try? await MKLocalSearch(request: request).start() else { return [] }
+                    return response.mapItems.prefix(10).compactMap { item in
+                        guard let name = item.name else { return nil }
+                        return SafeHaven(
                             name: name,
-                            category: cat,
-                            coordinate: itemCoord,
-                            address: item.placemark.title ?? "Nearby Safe Haven",
-                            isOpen24Hours: true,
-                            note: "Verified local spot with public lighting"
+                            category: search.category,
+                            coordinate: item.location.coordinate,
+                            address: item.address?.shortAddress ?? String(localized: "Address not listed"),
+                            isOpen24Hours: false,
+                            note: String(localized: "Usually staffed. Check that it's open before relying on it."),
+                            source: .appleMaps
                         )
-                        results.append(haven)
                     }
                 }
             }
+            var all: [SafeHaven] = []
+            for await havens in group {
+                all += havens
+            }
+            return all
         }
+    }
 
-        return results
+    /// One pin per place: the same kind of place within 60 m counts as a duplicate. The entry with
+    /// the most trustworthy details wins (curated, then OpenStreetMap with hours, then the rest).
+    static func merged(_ havens: [SafeHaven]) -> [SafeHaven] {
+        func rank(_ haven: SafeHaven) -> Int {
+            switch haven.source {
+            case .curated: return 0
+            case .openStreetMap: return haven.openingHours == nil ? 2 : 1
+            case .appleMaps: return 3
+            }
+        }
+        var result: [SafeHaven] = []
+        for haven in havens.sorted(by: { rank($0) < rank($1) }) {
+            let location = CLLocation(latitude: haven.coordinate.latitude, longitude: haven.coordinate.longitude)
+            let isDuplicate = result.contains { existing in
+                existing.category == haven.category
+                    && CLLocation(latitude: existing.coordinate.latitude, longitude: existing.coordinate.longitude)
+                        .distance(from: location) < 60
+            }
+            if !isDuplicate {
+                result.append(haven)
+            }
+        }
+        return result
     }
 }

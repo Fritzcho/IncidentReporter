@@ -31,8 +31,6 @@ struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("appLanguage") private var appLanguage: String = "en"
     @AppStorage("incidentTimeFilter") private var timeFilter: IncidentTimeFilter = .twelveHours
-    @AppStorage("emergencyContactName") private var emergencyContactName: String = "Emma"
-    @AppStorage("emergencyContactPhone") private var emergencyContactPhone: String = ""
     @AppStorage("shakeTriggerAction") private var shakeTriggerAction: ShakeTriggerAction = .fakeCall
 
     @Query private var incidents: [Incident]
@@ -59,13 +57,8 @@ struct SettingsView: View {
 
                 Section(
                     header: Text("Safety & Quick Triggers"),
-                    footer: Text("Assign the iPhone Action Button or Back Tap in Apple Shortcuts to 'Trigger Fake Call', 'Start Safety Timer', or 'Report Danger' for instant eyes-free access.")
+                    footer: Text("Assign the iPhone Action Button or Back Tap in Apple Shortcuts to 'Trigger Fake Call', 'Start Safety Timer', or 'Report Danger' for instant eyes-free access. Trusted contacts are on My page.")
                 ) {
-                    EmergencyContactInputView(
-                        contactName: $emergencyContactName,
-                        contactPhone: $emergencyContactPhone
-                    )
-
                     Picker("Shake Phone Action", selection: $shakeTriggerAction) {
                         ForEach(ShakeTriggerAction.allCases) { action in
                             Label(LocalizedStringKey(action.rawValue), systemImage: action.icon)

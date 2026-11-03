@@ -21,11 +21,15 @@ struct SafeHavenAnnotationView: View {
                     .foregroundStyle(.white)
             }
 
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(.green)
-                .background(Circle().fill(.white).frame(width: 8, height: 8))
+            // Green tick: known to be open now. Closed places are faded instead
+            if haven.isOpen() == true {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.green)
+                    .background(Circle().fill(.white).frame(width: 8, height: 8))
+            }
         }
+        .opacity(haven.isOpen() == false ? 0.45 : 1)
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
     }
 }

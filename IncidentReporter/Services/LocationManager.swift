@@ -13,6 +13,8 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     /// Distance in meters under which a proximity alert triggers
     var proximityThresholdMeters: CLLocationDistance = 500.0
+    /// Turned off from My page by users who don't want "danger ahead" warnings
+    var proximityAlertsEnabled = true
 
     private var isAuthorized: Bool {
         #if os(visionOS)
@@ -50,13 +52,26 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         clManager.stopUpdatingLocation()
     }
 
+    /// Keeps location updates (and so the app, its route checks and danger alerts) running while the
+    /// phone is locked or another app is open. Only on during an active safe route; iOS shows the blue
+    /// location indicator meanwhile.
+    func setBackgroundTracking(_ enabled: Bool) {
+        guard isAuthorized else { return }
+        clManager.allowsBackgroundLocationUpdates = enabled
+        clManager.showsBackgroundLocationIndicator = enabled
+        clManager.pausesLocationUpdatesAutomatically = !enabled
+        if enabled {
+            clManager.startUpdatingLocation()
+        }
+    }
+
     func dismissApproachingIncident() {
         approachingIncident = nil
     }
 
     // MARK: - Proximity Alert Evaluation
     func checkProximity(to incidents: [Incident]) {
-        guard let userLocation else { return }
+        guard proximityAlertsEnabled, let userLocation else { return }
 
         // Find the nearest incident
         var nearestCandidate: (incident: Incident, distance: CLLocationDistance)?

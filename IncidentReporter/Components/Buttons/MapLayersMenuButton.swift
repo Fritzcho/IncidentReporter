@@ -5,6 +5,8 @@ import SwiftUI
 struct MapLayersMenuButton: View {
     @Binding var showPoliceReports: Bool
     @Binding var showSafeHavens: Bool
+    @Binding var showTransitAlerts: Bool
+    @Binding var safeHavensOpenNowOnly: Bool
     @Binding var visibleTransitModes: Set<TransitMode>
     @Binding var timeFilter: IncidentTimeFilter
     var isSyncingPolice: Bool = false
@@ -34,6 +36,14 @@ struct MapLayersMenuButton: View {
                 }
                 Toggle(isOn: $showSafeHavens) {
                     Label("Safe havens", systemImage: "checkmark.shield.fill")
+                }
+                if showSafeHavens {
+                    Toggle(isOn: $safeHavensOpenNowOnly) {
+                        Label("Only havens open now", systemImage: "clock.badge.checkmark")
+                    }
+                }
+                Toggle(isOn: $showTransitAlerts) {
+                    Label("SL safety alerts", systemImage: "exclamationmark.triangle.fill")
                 }
             }
 
@@ -100,12 +110,16 @@ struct MapLayersMenuButton: View {
         MapLayersMenuButton(
             showPoliceReports: .constant(true),
             showSafeHavens: .constant(true),
+            showTransitAlerts: .constant(true),
+            safeHavensOpenNowOnly: .constant(false),
             visibleTransitModes: .constant([.metro, .train, .bus]),
             timeFilter: .constant(.twelveHours)
         ) {}
         MapLayersMenuButton(
             showPoliceReports: .constant(true),
             showSafeHavens: .constant(false),
+            showTransitAlerts: .constant(false),
+            safeHavensOpenNowOnly: .constant(true),
             visibleTransitModes: .constant([.bus]),
             timeFilter: .constant(.week),
             isSyncingPolice: true

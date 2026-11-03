@@ -19,6 +19,31 @@ struct SafeHavenDetailSheet: View {
         }
     }
 
+    private var hoursStatus: LocalizedStringKey {
+        if haven.isOpen24Hours { return "Open 24/7" }
+        switch haven.isOpen() {
+        case true?: return "Open now"
+        case false?: return "Closed now"
+        case nil: return "Hours not verified"
+        }
+    }
+
+    private var hoursIcon: String {
+        switch haven.isOpen() {
+        case true?: return "clock.badge.checkmark"
+        case false?: return "clock.badge.xmark"
+        case nil: return "clock.badge.questionmark"
+        }
+    }
+
+    private var hoursColor: Color {
+        switch haven.isOpen() {
+        case true?: return .green
+        case false?: return .red
+        case nil: return .orange
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
@@ -76,16 +101,38 @@ struct SafeHavenDetailSheet: View {
                     }
 
                     HStack(spacing: 12) {
-                        Image(systemName: haven.isOpen24Hours ? "clock.badge.checkmark" : "clock")
+                        Image(systemName: hoursIcon)
                             .font(.headline)
-                            .foregroundStyle(haven.isOpen24Hours ? .green : .orange)
+                            .foregroundStyle(hoursColor)
                             .frame(width: 24)
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Accessibility")
+                            Text("Opening hours")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                            Text(haven.isOpen24Hours ? "Open 24/7 • Staffed" : "Evening hours")
+                            Text(hoursStatus)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(hoursColor)
+                            if let raw = haven.openingHoursText, !haven.isOpen24Hours {
+                                Text(raw)
+                                    .font(.caption.monospaced())
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer()
+                    }
+
+                    HStack(spacing: 12) {
+                        Image(systemName: "info.circle")
+                            .font(.headline)
+                            .foregroundStyle(.secondary)
+                            .frame(width: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Source")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(LocalizedStringKey(haven.source.rawValue))
                                 .font(.subheadline.weight(.medium))
                         }
                         Spacer()

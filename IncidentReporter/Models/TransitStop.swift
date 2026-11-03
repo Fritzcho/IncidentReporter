@@ -116,8 +116,11 @@ nonisolated enum TransitServiceStatus: Hashable, Sendable {
         var last: TransitDeparture?
         for (index, current) in upcoming.enumerated() {
             guard current.expected <= windowEnd else { break }
-            let following = upcoming.indices.contains(index + 1) ? upcoming[index + 1] : nil
-            if let following, following.expected.timeIntervalSince(current.expected) <= Self.serviceBreak {
+            // The end of the list is where SL's data stops, not proof that service stops:
+            // only a long gap before a known later departure marks the overnight break
+            guard upcoming.indices.contains(index + 1) else { break }
+            let following = upcoming[index + 1]
+            if following.expected.timeIntervalSince(current.expected) <= Self.serviceBreak {
                 continue
             }
             last = current

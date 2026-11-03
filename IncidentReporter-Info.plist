@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyLists-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Keys Xcode can't generate from build settings; merged with the generated Info.plist -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<!-- Keeps an active safe route watching for new dangers while the phone is locked -->
+		<string>location</string>
+	</array>
+</dict>
+</plist>

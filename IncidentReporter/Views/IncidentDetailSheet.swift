@@ -6,6 +6,7 @@ struct IncidentDetailSheet: View {
     let userLocation: CLLocation?
     @Environment(\.dismiss) private var dismiss
     @State private var voiceMemoService = VoiceMemoService.shared
+    @State private var ignoredStore = IgnoredIncidentStore.shared
 
     private var distanceText: String {
         guard let userLocation else { return "Unknown distance" }
@@ -101,6 +102,16 @@ struct IncidentDetailSheet: View {
                         }
                     }
                     .font(.subheadline)
+
+                    Divider()
+
+                    // Per-user dismissal: the warning stays on everyone else's map
+                    IgnoreDangerButton(isIgnored: ignoredStore.isIgnored(incident)) {
+                        ignoredStore.ignore(incident)
+                        dismiss()
+                    } onRestore: {
+                        ignoredStore.restore(incident)
+                    }
                 }
                 .padding()
             }

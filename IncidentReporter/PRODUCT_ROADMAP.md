@@ -19,6 +19,10 @@
 * **"Safe Route" Navigation (Pedestrian Routing Engine):** 
   * Standard navigation optimizes strictly for speed or distance, often routing pedestrians through unlit alleys, secluded parks, or industrial paths.
   * A safety-weighted routing engine evaluates candidate paths against recent incident density, verified street lighting, and open businesses.
+* **Home & Temporary Home** *(planned — noted 2026-11-02)*:
+  * Let the user save a **Home** so "safe route home" is one tap instead of a search.
+  * Add a **temporary home** for nights spent elsewhere (e.g. sleeping over at a friend's): it replaces Home as the default destination until it expires (next morning, or a time the user picks), then Home is restored automatically.
+  * Should also become the default destination for the Safety Timer and, later, "Walk With Me" arrival detection.
 
 ### Category B: Immediate Defense & Discreet Actions
 * **Discreet Fake Call:** 
