@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "%.1f km" : {
-
-    },
     "%.1f km ahead" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -71,6 +68,16 @@
     "%@ ago" : {
 
     },
+    "%@ stop %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ stop %2$@"
+          }
+        }
+      }
+    },
     "%@, %@" : {
       "localizations" : {
         "en" : {
@@ -82,9 +89,6 @@
       }
     },
     "%lld" : {
-
-    },
-    "%lld m" : {
 
     },
     "%lld m ahead" : {
@@ -549,12 +553,6 @@
         }
       }
     },
-    "Couldn't load departures for %@." : {
-
-    },
-    "Couldn't load SL stops. Check your connection and try again." : {
-
-    },
     "Couldn't open %@" : {
 
     },
@@ -622,9 +620,6 @@
 
     },
     "Delete recorded voice memo" : {
-
-    },
-    "Departures" : {
 
     },
     "Describe what happened, descriptions of individuals, or safer detours..." : {
@@ -1276,9 +1271,6 @@
         }
       }
     },
-    "Nearby stops" : {
-
-    },
     "Next departure %@" : {
 
     },
@@ -1881,12 +1873,6 @@
         }
       }
     },
-    "Search any SL stop" : {
-
-    },
-    "Search departures at any stop" : {
-
-    },
     "Send Emergency SOS SMS Now" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2013,9 +1999,6 @@
     "Starts a 20-minute Safety Walk countdown timer with check-in reminders." : {
 
     },
-    "Stop %@" : {
-
-    },
     "Stop Recording" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2037,9 +2020,6 @@
 
     },
     "Stop voice memo preview" : {
-
-    },
-    "Stops" : {
 
     },
     "Streets appear clear or no alerts match your search." : {

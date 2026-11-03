@@ -15,9 +15,8 @@ nonisolated enum TransitMode: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    /// Modes shown on the map by default. Trams and boats can be turned on from the map layers menu,
-    /// and are always shown when the user looks up a specific stop.
-    static let defaultVisibleModes: [TransitMode] = [.metro, .train, .bus]
+    /// Modes shown on the map by default: subway and commuter train.
+    static let defaultVisibleModes: [TransitMode] = [.metro, .train]
 
     /// Maps an SL stop area type (from the stop-points register) to the mode it serves.
     init?(stopAreaType: String) {
@@ -143,7 +142,7 @@ nonisolated struct TransitStop: Identifiable, Hashable, Sendable {
     let fetchedAt: Date
 
     /// The mode used for the map pin (subway, then commuter train, then bus).
-    var primaryMode: TransitMode { modes.first ?? .bus }
+    var primaryMode: TransitMode { modes.first ?? .metro }
 
     func departures(for mode: TransitMode) -> [TransitDeparture] {
         departures.filter { $0.mode == mode }
