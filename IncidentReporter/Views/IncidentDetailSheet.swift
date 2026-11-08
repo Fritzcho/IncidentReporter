@@ -6,6 +6,7 @@ struct IncidentDetailSheet: View {
     let userLocation: CLLocation?
     @Environment(\.dismiss) private var dismiss
     @State private var voiceMemoService = VoiceMemoService.shared
+    @State private var ignoredStore = IgnoredIncidentStore.shared
 
     private var distanceText: String {
         guard let userLocation else { return "Unknown distance" }
@@ -83,6 +84,13 @@ struct IncidentDetailSheet: View {
                         )
 
                         IncidentMetadataRow(
+                            "Threat Level",
+                            systemImage: "exclamationmark.shield.fill",
+                            value: "\(incident.severity.rawValue) Severity",
+                            color: incident.severity.color
+                        )
+
+                        IncidentMetadataRow(
                             "Freshness",
                             systemImage: incident.decayStatus.icon,
                             value: "\(incident.decayStatus.rawValue) • \(incident.isExpired ? "Older than 24h" : "Active risk")",
@@ -101,6 +109,16 @@ struct IncidentDetailSheet: View {
                         }
                     }
                     .font(.subheadline)
+
+                    Divider()
+
+                    // Per-user dismissal: the warning stays on everyone else's map
+                    IgnoreDangerButton(isIgnored: ignoredStore.isIgnored(incident)) {
+                        ignoredStore.ignore(incident)
+                        dismiss()
+                    } onRestore: {
+                        ignoredStore.restore(incident)
+                    }
                 }
                 .padding()
             }

@@ -13,6 +13,8 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     /// Distance in meters under which a proximity alert triggers
     var proximityThresholdMeters: CLLocationDistance = 500.0
+    /// Turned off from My page by users who don't want "danger ahead" warnings
+    var proximityAlertsEnabled = true
 
     private var isAuthorized: Bool {
         #if os(visionOS)
@@ -43,6 +45,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     }
 
     func startUpdatingLocation() {
+        guard isAuthorized else { return }
         clManager.startUpdatingLocation()
     }
 
@@ -56,7 +59,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
 
     // MARK: - Proximity Alert Evaluation
     func checkProximity(to incidents: [Incident]) {
-        guard let userLocation else { return }
+        guard proximityAlertsEnabled, let userLocation else { return }
 
         // Find the nearest incident
         var nearestCandidate: (incident: Incident, distance: CLLocationDistance)?
@@ -90,10 +93,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
                 )
             }
         } else {
-            // Cleared distance from previously approached incident
-            if approachingIncident != nil {
-                approachingIncident = nil
-            }
+            approachingIncident = nil
         }
     }
 
@@ -101,17 +101,21 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         authorizationStatus = manager.authorizationStatus
         if isAuthorized {
-            manager.startUpdatingLocation()
+            clManager.startUpdatingLocation()
+        } else {
+            clManager.stopUpdatingLocation()
+            userLocation = nil
         }
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let latest = locations.last else { return }
-        userLocation = latest
+        guard let location = locations.last else { return }
+        userLocation = location
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // kCLErrorDomain Code 0 is common on Simulator when location simulation is off
+        #if DEBUG
         print("Location manager error: \(error.localizedDescription)")
+        #endif
     }
 }

@@ -34,11 +34,14 @@ struct IncidentMapView: View {
     @State private var callService = FakeCallService.shared
     @State private var safetyTimerService = SafetyTimerService.shared
     @State private var quickActionCoordinator = QuickActionCoordinator.shared
+    @State private var ignoredStore = IgnoredIncidentStore.shared
 
     @AppStorage("showPoliceReports") private var showPoliceReports = true
     @AppStorage("showSafeHavens") private var showSafeHavens = true
     @AppStorage("incidentTimeFilter") private var timeFilter: IncidentTimeFilter = .twelveHours
     @AppStorage("shakeTriggerAction") private var shakeTriggerActionRaw: String = ShakeTriggerAction.fakeCall.rawValue
+    @AppStorage("proximityAlertsEnabled") private var proximityAlertsEnabled = true
+    @AppStorage("proximityAlertDistance") private var proximityAlertDistance: Double = 500.0
 
     /// Subway and commuter train stations are shown by default; bus stops and other modes are excluded
     private let visibleTransitModes: Set<TransitMode> = [.metro, .train]
@@ -55,6 +58,11 @@ struct IncidentMapView: View {
             }
             return true
         }
+    }
+
+    /// Incidents that trigger proximity alerts (excludes dangers the user marked as over)
+    private var activeIncidents: [Incident] {
+        displayedIncidents.filter { !ignoredStore.isIgnored($0) }
     }
 
     /// Reference point for the nearest-stop search: the user's position, or Central Stockholm
@@ -159,6 +167,13 @@ struct IncidentMapView: View {
             }
             safeHavens = await SafeHavenService.shared.fetchHavens(around: reference.coordinate)
         }
+        .task(id: "\(proximityAlertsEnabled)-\(proximityAlertDistance)") {
+            locationManager.proximityAlertsEnabled = proximityAlertsEnabled
+            locationManager.proximityThresholdMeters = proximityAlertDistance
+            if !proximityAlertsEnabled {
+                locationManager.dismissApproachingIncident()
+            }
+        }
         .task(id: transitSearchKey) {
             await refreshTransitStops()
         }
@@ -170,7 +185,7 @@ struct IncidentMapView: View {
             Task { await openDepartures(for: feature) }
         }
         .onChange(of: locationManager.userLocation) { oldLoc, newLoc in
-            locationManager.checkProximity(to: displayedIncidents)
+            locationManager.checkProximity(to: activeIncidents)
 
             // When new GPS fix is received on launch, sync police events & safe havens around user coordinates
             if let newLoc, oldLoc == nil {
@@ -192,16 +207,22 @@ struct IncidentMapView: View {
             }
         }
         .onChange(of: incidents) { _, _ in
-            locationManager.checkProximity(to: displayedIncidents)
+            locationManager.checkProximity(to: activeIncidents)
+        }
+        .onChange(of: ignoredStore.keys) { _, _ in
+            if let approaching = locationManager.approachingIncident, ignoredStore.isIgnored(approaching) {
+                locationManager.dismissApproachingIncident()
+            }
+            locationManager.checkProximity(to: activeIncidents)
         }
         .onChange(of: timeFilter) { _, _ in
-            locationManager.checkProximity(to: displayedIncidents)
+            locationManager.checkProximity(to: activeIncidents)
             if let selected = selectedIncident, !displayedIncidents.contains(where: { $0.id == selected.id }) {
                 selectedIncident = nil
             }
         }
         .onChange(of: showPoliceReports) { _, isEnabled in
-            locationManager.checkProximity(to: displayedIncidents)
+            locationManager.checkProximity(to: activeIncidents)
             if !isEnabled, let selected = selectedIncident, selected.isPoliceReport {
                 selectedIncident = nil
             } else if isEnabled {
@@ -383,6 +404,7 @@ struct IncidentMapView: View {
         }
     }
 
+    /// Loads the full departures sheet when a stop marker is tapped.
     private func openDepartures(for summary: TransitStopSummary) async {
         guard loadingStopID == nil else { return }
         loadingStopID = summary.id
@@ -409,6 +431,9 @@ struct IncidentMapView: View {
             incident: incident,
             isSelected: selectedIncident?.id == incident.id
         )
+        // Dangers the user marked as over stay visible but faded
+        .grayscale(ignoredStore.isIgnored(incident) ? 1 : 0)
+        .opacity(ignoredStore.isIgnored(incident) ? 0.4 : 1)
         .onTapGesture(perform: onTap)
     }
 

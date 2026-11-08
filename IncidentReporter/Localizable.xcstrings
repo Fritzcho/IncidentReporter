@@ -71,6 +71,9 @@
     "%@ ago" : {
 
     },
+    "%@ Severity" : {
+
+    },
     "%@ stop %@" : {
       "localizations" : {
         "en" : {
@@ -1257,6 +1260,9 @@
     "Incoming call in %llds..." : {
 
     },
+    "It's over — ignore for me" : {
+
+    },
     "Language" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1502,6 +1508,9 @@
 
     },
     "Older incidents fade automatically to keep danger signals prominent." : {
+
+    },
+    "Only hides the warning for you. Everyone else still sees it." : {
 
     },
     "Only small detours around recent, serious dangers." : {
@@ -2499,10 +2508,16 @@
     "Warn me about all of them again" : {
 
     },
+    "Warn me about this again" : {
+
+    },
     "Warn me near dangers" : {
 
     },
     "Warning distance" : {
+
+    },
+    "You marked this danger as over. It doesn't trigger alerts or affect your safe routes." : {
 
     },
     "Your location isn't available. Check that location access is on." : {
