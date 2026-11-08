@@ -810,92 +810,112 @@ struct IncidentMapView: View {
 
             Spacer()
 
+            bottomControls
+        }
+    }
+
+    @ViewBuilder
+    private var bottomControls: some View {
+        ZStack(alignment: .bottom) {
             HStack(alignment: .bottom, spacing: 12) {
                 if let destination = routeDestination {
-                    SafeRouteSummaryCard(
-                        destinationName: routePlan?.destinationName ?? destination.name ?? String(localized: "Destination"),
-                        originName: routeOrigin?.name,
-                        travelTime: routePlan?.recommended.travelTime,
-                        distance: routePlan?.recommended.distance,
-                        extraTime: routeComparison.extraTime,
-                        avoidedCount: routeComparison.avoided,
-                        passedCount: routeComparison.passed,
-                        dangerNames: routeDangerNames,
-                        trip: activeTrip?.trip,
-                        isLoading: isPlanningRoute && routePlan == nil,
-                        errorMessage: routeErrorMessage,
-                        onOpenDetails: routePlan == nil ? nil : { isPresentingRouteDetails = true }
-                    ) {
-                        withAnimation {
-                            routeDestination = nil
-                            routeOrigin = nil
-                            routePlan = nil
-                            selectedTripID = nil
-                        }
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    safeRouteSummaryCard(destination: destination)
                 } else if let home = myPlaces.effectiveHome {
                     TakeMeHomeButton(temporaryHomeLabel: myPlaces.activeTemporaryHome?.place.label) {
                         routePlan = nil
                         routeOrigin = nil
                         routeDestination = home.mapItem
                     }
+                    .padding(.bottom, 56)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
                 Spacer(minLength: 0)
 
-                VStack(alignment: .trailing, spacing: 12) {
-                    // Safe Route planner button
-                    SafeRouteButton(isActive: routeDestination != nil) {
-                        isPresentingRouteSearch = true
-                    }
-
-                    // Sync Swedish Police events button (available when police reports are enabled)
-                    if showPoliceReports {
-                        PoliceSyncButton(isSyncing: isSyncingPoliceEvents) {
-                            Task {
-                                isSyncingPoliceEvents = true
-                                let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
-                                await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference, force: true)
-                                try? await Task.sleep(nanoseconds: 600_000_000)
-                                isSyncingPoliceEvents = false
-                            }
-                        }
-                        .transition(.scale.combined(with: .opacity))
-                    }
-
-                    // Toggle Swedish Police API reports button
-                    PoliceFilterButton(showPoliceReports: $showPoliceReports)
-
-                    // Toggle Trygga platser (Safe Havens) button
-                    SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
-
-                    // Safety Walk Timer button
-                    SafetyTimerButton(
-                        isActive: safetyTimerService.isActive,
-                        isEscalated: safetyTimerService.state == .escalated
-                    ) {
-                        isPresentingSafetyTimerSheet = true
-                    }
-
-                    // Discreet Fake Call button
-                    DiscreetCallButton {
-                        isPresentingFakeCallLauncher = true
-                    }
-
-                    // Filter incidents by recency / time decay
-                    TimeFilterMenuButton(timeFilter: $timeFilter)
-
-                    // Report danger button
-                    ReportDangerButton {
-                        isPresentingReportSheet = true
-                    }
-                }
+                trailingButtonsColumn
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.horizontal, 14)
-            .padding(.bottom, 24)
+
+            // Big green Safe Route button centered right above the bottom menu bar
+            if routeDestination == nil {
+                SafeRouteButton {
+                    isPresentingRouteSearch = true
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.bottom, 20)
+    }
+
+    @ViewBuilder
+    private func safeRouteSummaryCard(destination: MKMapItem) -> some View {
+        SafeRouteSummaryCard(
+            destinationName: routePlan?.destinationName ?? destination.name ?? String(localized: "Destination"),
+            originName: routeOrigin?.name,
+            travelTime: routePlan?.recommended.travelTime,
+            distance: routePlan?.recommended.distance,
+            extraTime: routeComparison.extraTime,
+            avoidedCount: routeComparison.avoided,
+            passedCount: routeComparison.passed,
+            dangerNames: routeDangerNames,
+            trip: activeTrip?.trip,
+            isLoading: isPlanningRoute && routePlan == nil,
+            errorMessage: routeErrorMessage,
+            onOpenDetails: routePlan == nil ? nil : { isPresentingRouteDetails = true }
+        ) {
+            withAnimation {
+                routeDestination = nil
+                routeOrigin = nil
+                routePlan = nil
+                selectedTripID = nil
+            }
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    @ViewBuilder
+    private var trailingButtonsColumn: some View {
+        VStack(alignment: .trailing, spacing: 12) {
+            if showPoliceReports {
+                PoliceSyncButton(isSyncing: isSyncingPoliceEvents) {
+                    Task {
+                        isSyncingPoliceEvents = true
+                        let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
+                        await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference, force: true)
+                        try? await Task.sleep(nanoseconds: 600_000_000)
+                        isSyncingPoliceEvents = false
+                    }
+                }
+                .transition(.scale.combined(with: .opacity))
+            }
+
+            // Toggle Swedish Police API reports button
+            PoliceFilterButton(showPoliceReports: $showPoliceReports)
+
+            // Toggle Trygga platser (Safe Havens) button
+            SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
+
+            // Safety Walk Timer button
+            SafetyTimerButton(
+                isActive: safetyTimerService.isActive,
+                isEscalated: safetyTimerService.state == .escalated
+            ) {
+                isPresentingSafetyTimerSheet = true
+            }
+
+            // Discreet Fake Call button
+            DiscreetCallButton {
+                isPresentingFakeCallLauncher = true
+            }
+
+            // Filter incidents by recency / time decay
+            TimeFilterMenuButton(timeFilter: $timeFilter)
+
+            // Report danger button
+            ReportDangerButton {
+                isPresentingReportSheet = true
+            }
         }
     }
 
