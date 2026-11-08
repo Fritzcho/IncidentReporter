@@ -1961,6 +1961,9 @@
     "Remove all your places and contacts?" : {
 
     },
+    "Report danger" : {
+
+    },
     "Report Danger" : {
       "extractionState" : "manual",
       "localizations" : {

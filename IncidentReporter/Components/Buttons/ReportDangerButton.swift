@@ -1,24 +1,29 @@
 import SwiftUI
 
-/// A prominent call-to-action button for reporting a new safety danger or incident.
+/// A circular map control button for reporting a new safety danger or incident.
 struct ReportDangerButton: View {
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Label("Report Danger", systemImage: "exclamationmark.shield.fill")
-                .font(.headline)
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.title3)
                 .foregroundStyle(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 14)
-                .background(Color.accentColor.gradient)
-                .clipShape(Capsule())
-                .shadow(color: Color.accentColor.opacity(0.4), radius: 8, x: 0, y: 4)
+                .overlay(alignment: .topTrailing) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundStyle(.white)
+                        .offset(x: 6, y: -4)
+                }
         }
+        .buttonStyle(.circularMapControl(isFilled: true, fillColor: .red))
+        .accessibilityLabel("Report danger")
     }
 }
 
 #Preview {
-    ReportDangerButton {}
-        .padding()
+    HStack(spacing: 16) {
+        ReportDangerButton {}
+    }
+    .padding()
 }
