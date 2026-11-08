@@ -8,19 +8,18 @@ struct SafetyTimerButton: View {
 
     var body: some View {
         Button(action: action) {
-            ZStack(alignment: .topTrailing) {
-                Image(systemName: isEscalated ? "bell.and.waves.left.and.right.fill" : (isActive ? "timer.circle.fill" : "timer"))
-                    .font(.title3)
-                    .foregroundStyle(iconColor)
-                    .symbolEffect(.pulse, isActive: isActive || isEscalated)
-
-                if isActive {
-                    Circle()
-                        .fill(isEscalated ? Color.red : Color.green)
-                        .frame(width: 9, height: 9)
-                        .offset(x: 3, y: -3)
+            Image(systemName: isEscalated ? "bell.and.waves.left.and.right.fill" : (isActive ? "timer.circle.fill" : "timer"))
+                .font(.title3)
+                .foregroundStyle(iconColor)
+                .symbolEffect(.pulse, isActive: isActive || isEscalated)
+                .overlay(alignment: .topTrailing) {
+                    if isActive {
+                        Circle()
+                            .fill(isEscalated ? Color.red : Color.green)
+                            .frame(width: 8, height: 8)
+                            .offset(x: 2, y: -2)
+                    }
                 }
-            }
         }
         .buttonStyle(.circularMapControl)
         .accessibilityLabel(isActive ? "Manage active safety timer" : "Start safety timer")

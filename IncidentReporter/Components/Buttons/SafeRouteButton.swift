@@ -10,14 +10,8 @@ struct SafeRouteButton: View {
             Image(systemName: "point.bottomleft.forward.to.point.topright.scurvepath.fill")
                 .font(.title3)
                 .foregroundStyle(isActive ? Color.white : Color.green)
-                .frame(width: 30, height: 30)
-                .background {
-                    if isActive {
-                        Circle().fill(Color.green.gradient)
-                    }
-                }
         }
-        .buttonStyle(.circularMapControl)
+        .buttonStyle(.circularMapControl(isFilled: isActive, fillColor: .green))
         .accessibilityLabel("Safe route")
         .accessibilityValue(isActive ? Text("Route active") : Text(""))
     }
