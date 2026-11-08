@@ -257,6 +257,9 @@
     "Address copied" : {
 
     },
+    "Affects" : {
+
+    },
     "Alert Summary" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1671,6 +1674,9 @@
     "Public transport" : {
 
     },
+    "Published" : {
+
+    },
     "Purge Expired Incidents?" : {
 
     },
@@ -2100,7 +2106,26 @@
     "Shows departures" : {
 
     },
+    "SL alert at %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "SL alert at %1$@: %2$@"
+          }
+        }
+      }
+    },
     "SL has no upcoming departures listed for this stop." : {
+
+    },
+    "SL safety alert" : {
+
+    },
+    "SL traffic information" : {
+
+    },
+    "Source" : {
 
     },
     "Start %lld-Minute Safety Timer" : {

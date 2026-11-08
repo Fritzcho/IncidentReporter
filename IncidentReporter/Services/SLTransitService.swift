@@ -174,6 +174,19 @@ actor SLTransitService {
         )
     }
 
+    /// The stop each of the given stop areas belongs to, keyed by stop area id.
+    /// Used to place SL disruption messages, which only name stop areas, on the map.
+    func stops(forStopAreas ids: Set<Int>) async throws -> [Int: TransitStopSummary] {
+        guard !ids.isEmpty else { return [:] }
+        var result: [Int: TransitStopSummary] = [:]
+        for site in try await loadSites() {
+            for area in site.stopAreas where ids.contains(area) {
+                result[area] = site.summary
+            }
+        }
+        return result
+    }
+
     // MARK: - Networking
 
     private func loadSites() async throws -> [SLSite] {
@@ -279,6 +292,8 @@ private nonisolated struct SLSite: Sendable {
     let lon: Double
     /// Modes served, from the stop register; empty when unknown
     let modes: Set<TransitMode>
+    /// Stop areas (platform groups) belonging to this site
+    let stopAreas: [Int]
 
     var summary: TransitStopSummary {
         TransitStopSummary(
@@ -307,7 +322,7 @@ private nonisolated struct SLSitePayload: Decodable, Sendable {
 
     func site(modes: Set<TransitMode>) -> SLSite? {
         guard let lat, let lon else { return nil }
-        return SLSite(id: id, name: name, note: note, lat: lat, lon: lon, modes: modes)
+        return SLSite(id: id, name: name, note: note, lat: lat, lon: lon, modes: modes, stopAreas: stopAreas ?? [])
     }
 }
 

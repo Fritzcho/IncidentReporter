@@ -16,6 +16,8 @@ struct IncidentMapView: View {
     @State private var selectedIncident: Incident?
     @State private var selectedSafeHaven: SafeHaven?
     @State private var selectedTransitStop: TransitStop?
+    @State private var selectedTransitAlert: TransitSafetyAlert?
+    @State private var transitAlerts: [TransitSafetyAlert] = []
     @State private var transitStops: [TransitStop] = []
     @State private var isLoadingTransit = false
     /// A transit icon drawn by Apple Maps that the user tapped
@@ -119,6 +121,12 @@ struct IncidentMapView: View {
                 userLocation: locationManager.userLocation
             )
         }
+        .sheet(item: $selectedTransitAlert) { alert in
+            TransitAlertDetailSheet(
+                alert: alert,
+                userLocation: locationManager.userLocation
+            )
+        }
         .sheet(isPresented: $isPresentingReportSheet) {
             ReportIncidentSheet(
                 initialCoordinate: locationManager.userLocation?.coordinate
@@ -166,6 +174,9 @@ struct IncidentMapView: View {
                 await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference)
             }
             safeHavens = await SafeHavenService.shared.fetchHavens(around: reference.coordinate)
+        }
+        .task {
+            await refreshTransitAlerts()
         }
         .task(id: "\(proximityAlertsEnabled)-\(proximityAlertDistance)") {
             locationManager.proximityAlertsEnabled = proximityAlertsEnabled
@@ -253,6 +264,24 @@ struct IncidentMapView: View {
                     }
                 }
 
+                // SL safety alerts (police operations, track fires, station closures)
+                ForEach(transitAlerts) { alert in
+                    let isIgnored = ignoredStore.isIgnored(key: alert.ignoreKey)
+                    Annotation(alert.header, coordinate: alert.coordinate) {
+                        TransitAlertAnnotationView(
+                            alert: alert,
+                            isSelected: selectedTransitAlert?.id == alert.id
+                        )
+                        .grayscale(isIgnored ? 1 : 0)
+                        .opacity(isIgnored ? 0.4 : 1)
+                        .onTapGesture {
+                            handlePinTap(at: alert.coordinate, proxy: proxy) {
+                                selectedTransitAlert = alert
+                            }
+                        }
+                    }
+                }
+
                 // Subway and commuter train stops in view when zoomed in; tap for details
                 ForEach(stopMarkers) { stop in
                     if let mode = stop.primaryMode(in: visibleTransitModes) {
@@ -330,6 +359,7 @@ struct IncidentMapView: View {
     private var pinCoordinates: [CLLocationCoordinate2D] {
         var coordinates = displayedIncidents.map(\.coordinate)
         coordinates += stopMarkers.filter { $0.primaryMode(in: visibleTransitModes) != nil }.map(\.coordinate)
+        coordinates += transitAlerts.map(\.coordinate)
         if showTransit {
             coordinates += transitStops.map(\.coordinate)
         }
@@ -365,6 +395,16 @@ struct IncidentMapView: View {
         )
         withAnimation(.easeInOut(duration: 0.4)) {
             cameraPosition = .region(MKCoordinateRegion(center: coordinate, span: span))
+        }
+    }
+
+    /// Keeps SL safety alerts current while the map is open. A failed fetch keeps the last known alerts.
+    private func refreshTransitAlerts() async {
+        while !Task.isCancelled {
+            if let alerts = try? await SLDeviationService.shared.safetyAlerts() {
+                transitAlerts = alerts
+            }
+            try? await Task.sleep(for: .seconds(90))
         }
     }
 
