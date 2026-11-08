@@ -5,6 +5,7 @@ import SwiftData
 struct IncidentMapView: View {
     @Query(sort: \Incident.timestamp, order: .reverse) private var incidents: [Incident]
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var locationManager = LocationManager()
     @State private var cameraPosition: MapCameraPosition = .camera(
@@ -37,6 +38,21 @@ struct IncidentMapView: View {
     @State private var safetyTimerService = SafetyTimerService.shared
     @State private var quickActionCoordinator = QuickActionCoordinator.shared
     @State private var ignoredStore = IgnoredIncidentStore.shared
+    @State private var myPlaces = MyPlacesStore.shared
+
+    // Safe route navigation state
+    @State private var isPresentingRouteSearch = false
+    @State private var routeDestination: MKMapItem?
+    @State private var routeOrigin: MKMapItem?
+    @State private var plannedDangerIDs: Set<String> = []
+    @State private var routeUpdate: RouteUpdate?
+    @State private var routeMode: RouteMode = .walk
+    @State private var selectedTripID: String?
+    @State private var isPresentingRouteDetails = false
+    @State private var routeRefreshTick = 0
+    @State private var routePlan: SafeRoutePlan?
+    @State private var isPlanningRoute = false
+    @State private var routeErrorMessage: String?
 
     @AppStorage("showPoliceReports") private var showPoliceReports = true
     @AppStorage("showSafeHavens") private var showSafeHavens = true
@@ -44,6 +60,9 @@ struct IncidentMapView: View {
     @AppStorage("shakeTriggerAction") private var shakeTriggerActionRaw: String = ShakeTriggerAction.fakeCall.rawValue
     @AppStorage("proximityAlertsEnabled") private var proximityAlertsEnabled = true
     @AppStorage("proximityAlertDistance") private var proximityAlertDistance: Double = 500.0
+    @AppStorage("routeCaution") private var routeCaution: RouteCaution = .balanced
+    @AppStorage("preferredTravelMode") private var preferredTravelMode: PreferredTravelMode = .automatic
+    @AppStorage("routeAlertsEnabled") private var routeAlertsEnabled = true
 
     /// Subway and commuter train stations are shown by default; bus stops and other modes are excluded
     private let visibleTransitModes: Set<TransitMode> = [.metro, .train]
@@ -65,6 +84,27 @@ struct IncidentMapView: View {
     /// Incidents that trigger proximity alerts (excludes dangers the user marked as over)
     private var activeIncidents: [Incident] {
         displayedIncidents.filter { !ignoredStore.isIgnored($0) }
+    }
+
+    /// Dangers the safe route steers around: every report from the last 24 hours and every active
+    /// SL safety alert the user hasn't marked as over, whatever the map filters show
+    private var routeDangers: [RouteDanger] {
+        let weight = routeCaution.penaltyWeight
+        let reported = incidents
+            .filter { !$0.isExpired && !ignoredStore.isIgnored($0) }
+            .map { RouteDanger(incident: $0, weight: weight) }
+        let alerts = transitAlerts
+            .filter { !ignoredStore.isIgnored(key: $0.ignoreKey) }
+            .map { RouteDanger(alert: $0, weight: weight) }
+        return reported + alerts
+    }
+
+    /// Re-plans the route when the destination or the set of dangers changes
+    private var routeKey: String {
+        guard let destination = routeDestination?.location.coordinate else { return "none" }
+        let origin = routeOrigin.map { "\($0.location.coordinate.latitude),\($0.location.coordinate.longitude)" } ?? "me"
+        let dangerIDs = routeDangers.map(\.id).sorted().joined(separator: ",")
+        return "\(origin)-\(destination.latitude),\(destination.longitude)-\(dangerIDs.hashValue)-\(routeCaution.rawValue)-\(routeRefreshTick)"
     }
 
     /// Reference point for the nearest-stop search: the user's position, or Central Stockholm
@@ -98,153 +138,195 @@ struct IncidentMapView: View {
     private let transitOnlyPOIFilter = PointOfInterestCategories.including([.publicTransport])
 
     var body: some View {
-        ZStack {
-            mapLayer
+        attachTasksAndObservers(to:
+            attachSheets(to:
+                ZStack {
+                    mapLayer
 
-            overlayControls
-        }
-        .sheet(item: $selectedIncident) { incident in
-            IncidentDetailSheet(
-                incident: incident,
-                userLocation: locationManager.userLocation
-            )
-        }
-        .sheet(item: $selectedSafeHaven) { haven in
-            SafeHavenDetailSheet(
-                haven: haven,
-                userLocation: locationManager.userLocation
-            )
-        }
-        .sheet(item: $selectedTransitStop) { stop in
-            TransitStopDetailSheet(
-                stop: stop,
-                userLocation: locationManager.userLocation
-            )
-        }
-        .sheet(item: $selectedTransitAlert) { alert in
-            TransitAlertDetailSheet(
-                alert: alert,
-                userLocation: locationManager.userLocation
-            )
-        }
-        .sheet(isPresented: $isPresentingReportSheet) {
-            ReportIncidentSheet(
-                initialCoordinate: locationManager.userLocation?.coordinate
-            )
-        }
-        .sheet(isPresented: $isPresentingTaxiLauncher) {
-            TaxiLauncherSheet(userLocation: locationManager.userLocation)
-        }
-        .sheet(isPresented: $isPresentingFakeCallLauncher) {
-            FakeCallLauncherSheet()
-        }
-        .sheet(isPresented: $isPresentingSafetyTimerSheet) {
-            SafetyTimerSheet(
-                userLocation: locationManager.userLocation
-            )
-        }
-        .fullScreenCover(isPresented: Binding(
-            get: { callService.isIncomingRinging || callService.isCallActive },
-            set: { if !$0 { callService.endCall() } }
-        )) {
-            FakeCallView()
-        }
-        .onChange(of: quickActionCoordinator.shouldPresentReportSheet) { _, shouldPresent in
-            if shouldPresent {
-                quickActionCoordinator.shouldPresentReportSheet = false
-                isPresentingReportSheet = true
-            }
-        }
-        .onChange(of: quickActionCoordinator.shouldPresentSafetyTimerSheet) { _, shouldPresent in
-            if shouldPresent {
-                quickActionCoordinator.shouldPresentSafetyTimerSheet = false
-                isPresentingSafetyTimerSheet = true
-            }
-        }
-        .onDeviceShake {
-            handleShakeTrigger()
-        }
-        .task {
-            locationManager.requestLocationAuthorization()
-            await NotificationService.shared.requestAuthorization()
-
-            // Fetch live Swedish Police events within 50km of user position or Central Stockholm if enabled
-            let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
-            if showPoliceReports {
-                await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference)
-            }
-            safeHavens = await SafeHavenService.shared.fetchHavens(around: reference.coordinate)
-        }
-        .task {
-            await refreshTransitAlerts()
-        }
-        .task(id: "\(proximityAlertsEnabled)-\(proximityAlertDistance)") {
-            locationManager.proximityAlertsEnabled = proximityAlertsEnabled
-            locationManager.proximityThresholdMeters = proximityAlertDistance
-            if !proximityAlertsEnabled {
-                locationManager.dismissApproachingIncident()
-            }
-        }
-        .task(id: transitSearchKey) {
-            await refreshTransitStops()
-        }
-        .task(id: visibleStopsKey) {
-            await loadVisibleStops()
-        }
-        .onChange(of: selectedMapFeature) { _, feature in
-            guard let feature else { return }
-            Task { await openDepartures(for: feature) }
-        }
-        .onChange(of: locationManager.userLocation) { oldLoc, newLoc in
-            locationManager.checkProximity(to: activeIncidents)
-
-            // When new GPS fix is received on launch, sync police events & safe havens around user coordinates
-            if let newLoc, oldLoc == nil {
-                let inSweden = newLoc.coordinate.latitude >= 55.0 &&
-                               newLoc.coordinate.latitude <= 70.0 &&
-                               newLoc.coordinate.longitude >= 10.0 &&
-                               newLoc.coordinate.longitude <= 25.0
-                if inSweden {
-                    withAnimation {
-                        cameraPosition = .userLocation(fallback: .camera(MapCamera(centerCoordinate: newLoc.coordinate, distance: 5000)))
-                    }
+                    overlayControls
                 }
-                Task {
-                    if showPoliceReports {
-                        await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: newLoc)
-                    }
-                    safeHavens = await SafeHavenService.shared.fetchHavens(around: newLoc.coordinate)
+            )
+        )
+    }
+
+    // MARK: - Modifiers split to maintain fast compiler type-checking
+    @ViewBuilder
+    private func attachSheets(to view: some View) -> some View {
+        view
+            .sheet(item: $selectedIncident) { incident in
+                IncidentDetailSheet(
+                    incident: incident,
+                    userLocation: locationManager.userLocation
+                )
+            }
+            .sheet(item: $selectedSafeHaven) { haven in
+                SafeHavenDetailSheet(
+                    haven: haven,
+                    userLocation: locationManager.userLocation
+                )
+            }
+            .sheet(item: $selectedTransitStop) { stop in
+                TransitStopDetailSheet(
+                    stop: stop,
+                    userLocation: locationManager.userLocation
+                )
+            }
+            .sheet(item: $selectedTransitAlert) { alert in
+                TransitAlertDetailSheet(
+                    alert: alert,
+                    userLocation: locationManager.userLocation
+                )
+            }
+            .sheet(isPresented: $isPresentingReportSheet) {
+                ReportIncidentSheet(
+                    initialCoordinate: locationManager.userLocation?.coordinate
+                )
+            }
+            .sheet(isPresented: $isPresentingRouteSearch) {
+                SafeRouteSearchSheet(
+                    userLocation: locationManager.userLocation,
+                    origin: routeOrigin,
+                    destination: routeDestination,
+                    home: myPlaces.effectiveHome,
+                    isTemporaryHome: myPlaces.activeTemporaryHome != nil,
+                    savedPlaces: myPlaces.otherSavedPlaces
+                ) { origin, destination in
+                    routePlan = nil
+                    routeOrigin = origin
+                    routeDestination = destination
                 }
             }
-        }
-        .onChange(of: incidents) { _, _ in
-            locationManager.checkProximity(to: activeIncidents)
-        }
-        .onChange(of: ignoredStore.keys) { _, _ in
-            if let approaching = locationManager.approachingIncident, ignoredStore.isIgnored(approaching) {
-                locationManager.dismissApproachingIncident()
+            .sheet(isPresented: $isPresentingRouteDetails) {
+                if let plan = routePlan {
+                    RouteDetailSheet(
+                        plan: plan,
+                        mode: $routeMode,
+                        selectedTripID: $selectedTripID
+                    )
+                }
             }
-            locationManager.checkProximity(to: activeIncidents)
-        }
-        .onChange(of: timeFilter) { _, _ in
-            locationManager.checkProximity(to: activeIncidents)
-            if let selected = selectedIncident, !displayedIncidents.contains(where: { $0.id == selected.id }) {
-                selectedIncident = nil
+            .sheet(isPresented: $isPresentingTaxiLauncher) {
+                TaxiLauncherSheet(userLocation: locationManager.userLocation)
             }
-        }
-        .onChange(of: showPoliceReports) { _, isEnabled in
-            locationManager.checkProximity(to: activeIncidents)
-            if !isEnabled, let selected = selectedIncident, selected.isPoliceReport {
-                selectedIncident = nil
-            } else if isEnabled {
-                Task {
-                    isSyncingPoliceEvents = true
-                    let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
+            .sheet(isPresented: $isPresentingFakeCallLauncher) {
+                FakeCallLauncherSheet()
+            }
+            .sheet(isPresented: $isPresentingSafetyTimerSheet) {
+                SafetyTimerSheet(
+                    userLocation: locationManager.userLocation
+                )
+            }
+            .fullScreenCover(isPresented: Binding(
+                get: { callService.isIncomingRinging || callService.isCallActive },
+                set: { if !$0 { callService.endCall() } }
+            )) {
+                FakeCallView()
+            }
+    }
+
+    @ViewBuilder
+    private func attachTasksAndObservers(to view: some View) -> some View {
+        view
+            .onChange(of: quickActionCoordinator.shouldPresentReportSheet) { _, shouldPresent in
+                if shouldPresent {
+                    quickActionCoordinator.shouldPresentReportSheet = false
+                    isPresentingReportSheet = true
+                }
+            }
+            .onChange(of: quickActionCoordinator.shouldPresentSafetyTimerSheet) { _, shouldPresent in
+                if shouldPresent {
+                    quickActionCoordinator.shouldPresentSafetyTimerSheet = false
+                    isPresentingSafetyTimerSheet = true
+                }
+            }
+            .onDeviceShake {
+                handleShakeTrigger()
+            }
+            .task {
+                locationManager.requestLocationAuthorization()
+                await NotificationService.shared.requestAuthorization()
+
+                let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
+                if showPoliceReports {
                     await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference)
-                    isSyncingPoliceEvents = false
+                }
+                safeHavens = await SafeHavenService.shared.fetchHavens(around: reference.coordinate)
+            }
+            .task {
+                await refreshTransitAlerts()
+            }
+            .task(id: routeKey) {
+                await planRoute()
+            }
+            .task(id: routeDestination != nil) {
+                await watchActiveRoute()
+            }
+            .task(id: "\(proximityAlertsEnabled)-\(proximityAlertDistance)") {
+                locationManager.proximityAlertsEnabled = proximityAlertsEnabled
+                locationManager.proximityThresholdMeters = proximityAlertDistance
+                if !proximityAlertsEnabled {
+                    locationManager.dismissApproachingIncident()
                 }
             }
-        }
+            .task(id: transitSearchKey) {
+                await refreshTransitStops()
+            }
+            .task(id: visibleStopsKey) {
+                await loadVisibleStops()
+            }
+            .onChange(of: selectedMapFeature) { _, feature in
+                guard let feature else { return }
+                Task { await openDepartures(for: feature) }
+            }
+            .onChange(of: locationManager.userLocation) { oldLoc, newLoc in
+                locationManager.checkProximity(to: activeIncidents)
+
+                if let newLoc, oldLoc == nil {
+                    let inSweden = newLoc.coordinate.latitude >= 55.0 &&
+                                   newLoc.coordinate.latitude <= 70.0 &&
+                                   newLoc.coordinate.longitude >= 10.0 &&
+                                   newLoc.coordinate.longitude <= 25.0
+                    if inSweden {
+                        withAnimation {
+                            cameraPosition = .userLocation(fallback: .camera(MapCamera(centerCoordinate: newLoc.coordinate, distance: 5000)))
+                        }
+                    }
+                    Task {
+                        if showPoliceReports {
+                            await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: newLoc)
+                        }
+                        safeHavens = await SafeHavenService.shared.fetchHavens(around: newLoc.coordinate)
+                    }
+                }
+            }
+            .onChange(of: incidents) { _, _ in
+                locationManager.checkProximity(to: activeIncidents)
+            }
+            .onChange(of: ignoredStore.keys) { _, _ in
+                if let approaching = locationManager.approachingIncident, ignoredStore.isIgnored(approaching) {
+                    locationManager.dismissApproachingIncident()
+                }
+                locationManager.checkProximity(to: activeIncidents)
+            }
+            .onChange(of: timeFilter) { _, _ in
+                locationManager.checkProximity(to: activeIncidents)
+                if let selected = selectedIncident, !displayedIncidents.contains(where: { $0.id == selected.id }) {
+                    selectedIncident = nil
+                }
+            }
+            .onChange(of: showPoliceReports) { _, isEnabled in
+                locationManager.checkProximity(to: activeIncidents)
+                if !isEnabled, let selected = selectedIncident, selected.isPoliceReport {
+                    selectedIncident = nil
+                } else if isEnabled {
+                    Task {
+                        isSyncingPoliceEvents = true
+                        let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
+                        await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference)
+                        isSyncingPoliceEvents = false
+                    }
+                }
+            }
     }
 
     // MARK: - Subviews
@@ -252,6 +334,9 @@ struct IncidentMapView: View {
         MapReader { proxy in
             Map(position: $cameraPosition, selection: $selectedMapFeature) {
                 UserAnnotation()
+
+                // Safe route polylines and markers
+                routeMapContent
 
                 // Danger & incident annotations
                 ForEach(displayedIncidents) { incident in
@@ -348,6 +433,43 @@ struct IncidentMapView: View {
         }
     }
 
+    @MapContentBuilder
+    private var routeMapContent: some MapContent {
+        if let routePlan {
+            if let trip = activeTrip?.trip {
+                // Public transport: walks dotted green, rides in their line colour, a marker where to get on
+                ForEach(trip.legs) { leg in
+                    if leg.isWalk {
+                        MapPolyline(leg.polyline)
+                            .stroke(Color.green, style: StrokeStyle(lineWidth: 5, lineCap: .round, dash: [1, 8]))
+                    } else {
+                        MapPolyline(leg.polyline)
+                            .stroke((leg.mode?.color ?? .blue).gradient, style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
+                    }
+                }
+                ForEach(trip.rides) { ride in
+                    Marker("\(ride.line ?? "") \(ride.from.name)", systemImage: ride.mode?.systemImage ?? "tram.fill",
+                           coordinate: ride.from.coordinate)
+                        .tint(ride.mode?.color ?? .blue)
+                }
+            } else {
+                ForEach(routePlan.alternatives) { route in
+                    MapPolyline(route.polyline)
+                        .stroke(Color.gray.opacity(0.5), style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: [2, 6]))
+                }
+                MapPolyline(routePlan.recommended.polyline)
+                    .stroke(Color.green.gradient, style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
+            }
+            Marker(routePlan.destinationName, systemImage: "flag.checkered", coordinate: routePlan.destination)
+                .tint(.green)
+            if let routeOrigin {
+                Marker(routeOrigin.name ?? String(localized: "Start"), systemImage: "circle.circle.fill",
+                       coordinate: routeOrigin.location.coordinate)
+                    .tint(.blue)
+            }
+        }
+    }
+
     // MARK: - Overlapping pins
 
     /// Pins whose centres are closer than this on screen overlap enough to be hard to tap apart
@@ -395,6 +517,168 @@ struct IncidentMapView: View {
         )
         withAnimation(.easeInOut(duration: 0.4)) {
             cameraPosition = .region(MKCoordinateRegion(center: coordinate, span: span))
+        }
+    }
+
+    // MARK: - Safe route
+
+    /// What the summary card names: the dangers the route still passes, or else the ones it avoids
+    private var routeDangerNames: [String] {
+        guard let routePlan else { return [] }
+        if let activeTrip {
+            if !activeTrip.dangersPassed.isEmpty {
+                return activeTrip.dangersPassed.map(\.title)
+            }
+            let passedIDs = Set(activeTrip.dangersPassed.map(\.id))
+            let fastest = routePlan.transitTrips.min { ($0.trip.arrival ?? .distantFuture) < ($1.trip.arrival ?? .distantFuture) }
+            return (fastest?.dangersPassed ?? []).filter { !passedIDs.contains($0.id) }.map(\.title)
+        }
+        let dangers = routePlan.recommended.dangersPassed.isEmpty
+            ? routePlan.avoidedDangers
+            : routePlan.recommended.dangersPassed
+        return dangers.map(\.title)
+    }
+
+    /// How the followed route compares with the fastest one: extra time, dangers avoided and still passed.
+    /// For public transport the comparison is against the trip that arrives first.
+    private var routeComparison: (extraTime: TimeInterval, avoided: Int, passed: Int) {
+        guard let routePlan else { return (0, 0, 0) }
+        guard let activeTrip else {
+            return (routePlan.extraTime, routePlan.avoidedDangers.count, routePlan.recommended.dangersPassed.count)
+        }
+        let fastest = routePlan.transitTrips.min { ($0.trip.arrival ?? .distantFuture) < ($1.trip.arrival ?? .distantFuture) } ?? activeTrip
+        let passedIDs = Set(activeTrip.dangersPassed.map(\.id))
+        let extra = (activeTrip.trip.arrival ?? .now).timeIntervalSince(fastest.trip.arrival ?? .now)
+        return (max(0, extra), fastest.dangersPassed.filter { !passedIDs.contains($0.id) }.count, passedIDs.count)
+    }
+
+    /// The public transport trip being followed, or nil when walking
+    private var activeTrip: ScoredTransitTrip? {
+        guard routeMode == .transit, let trips = routePlan?.transitTrips, !trips.isEmpty else { return nil }
+        return trips.first { $0.id == selectedTripID } ?? trips.first
+    }
+
+    /// The line the user is following on the map, used to spot new dangers on it
+    private func activePolyline(in plan: SafeRoutePlan, tripID: String?) -> MKPolyline {
+        if routeMode == .transit, let trip = plan.transitTrips.first(where: { $0.id == tripID }) ?? plan.transitTrips.first {
+            return trip.trip.polyline
+        }
+        return plan.recommended.polyline
+    }
+
+    /// Plans (or re-plans, when dangers change) the safe route to `routeDestination`.
+    /// The camera is framed on the route only the first time it is planned.
+    private func planRoute() async {
+        guard let destination = routeDestination else {
+            routePlan = nil
+            routeErrorMessage = nil
+            return
+        }
+        let previousPlan = routePlan
+        let isFirstPlan = previousPlan == nil
+        isPlanningRoute = true
+        defer { isPlanningRoute = false }
+        // Re-plans start where the user is now, so the new route continues from here
+        let origin = routeOrigin?.location.coordinate ?? transitReferenceLocation.coordinate
+        let dangers = routeDangers
+        do {
+            let plan = try await SafeRouteService.plan(from: origin, to: destination, avoiding: dangers)
+            guard !Task.isCancelled else { return }
+            if isFirstPlan {
+                // Start the way the user prefers; "fastest" picks public transport when it's clearly sooner
+                switch preferredTravelMode {
+                case .automatic: routeMode = plan.isTransitFaster ? .transit : .walk
+                case .walk: routeMode = .walk
+                case .transit: routeMode = plan.transitTrips.isEmpty ? .walk : .transit
+                }
+                selectedTripID = plan.transitTrips.first?.id
+            } else if !plan.transitTrips.contains(where: { $0.id == selectedTripID }) {
+                // The chosen departure has left or no longer works: follow the best one now
+                selectedTripID = plan.transitTrips.first?.id
+            }
+            if let previousPlan {
+                let fresh = SafeRouteService.newDangers(
+                    in: dangers,
+                    knownIDs: plannedDangerIDs,
+                    near: [activePolyline(in: previousPlan, tripID: selectedTripID), activePolyline(in: plan, tripID: selectedTripID)]
+                )
+                if !fresh.isEmpty {
+                    announceRouteUpdate(newDangers: fresh, plan: plan)
+                }
+            }
+            plannedDangerIDs = Set(dangers.map(\.id))
+            withAnimation {
+                routePlan = plan
+                routeErrorMessage = nil
+            }
+            if isFirstPlan {
+                let rect = plan.recommended.polyline.boundingMapRect
+                let padding = max(rect.size.width, rect.size.height) * 0.35
+                withAnimation(.easeInOut(duration: 0.6)) {
+                    cameraPosition = .rect(rect.insetBy(dx: -padding, dy: -padding * 1.6))
+                }
+            }
+        } catch {
+            guard !Task.isCancelled else { return }
+            routeErrorMessage = String(localized: "Couldn't find a walking route there.")
+        }
+    }
+
+    /// Tells the user about new dangers on their route: a banner in the app, and a notification
+    /// when the app is in the background (the phone is in their pocket).
+    private func announceRouteUpdate(newDangers: [RouteDanger], plan: SafeRoutePlan) {
+        let names = newDangers.map(\.title).joined(separator: ", ")
+        let followed = routeMode == .transit
+            ? plan.transitTrips.first { $0.id == selectedTripID }
+            : nil
+        let passedIDs = Set((followed?.dangersPassed ?? plan.recommended.dangersPassed).map(\.id))
+        let isRerouted = !newDangers.contains { passedIDs.contains($0.id) }
+        let arrival = followed?.trip.arrival ?? .now.addingTimeInterval(plan.recommended.travelTime)
+        let minutes = max(1, Int((arrival.timeIntervalSinceNow / 60).rounded(.up)))
+
+        let update = isRerouted
+            ? RouteUpdate(
+                title: String(localized: "Rerouted around a new danger"),
+                message: String(localized: "\(names). New route: \(minutes) min."),
+                isRerouted: true
+            )
+            : RouteUpdate(
+                title: String(localized: "New danger on your route"),
+                message: String(localized: "\(names). No safer way found, stay alert."),
+                isRerouted: false
+            )
+
+        guard routeAlertsEnabled else { return }
+        withAnimation {
+            routeUpdate = update
+        }
+        UINotificationFeedbackGenerator().notificationOccurred(isRerouted ? .success : .warning)
+        if scenePhase != .active {
+            NotificationService.shared.scheduleRouteUpdateNotification(
+                title: update.title,
+                body: update.message,
+                id: newDangers.map(\.id).sorted().joined(separator: "+")
+            )
+        }
+    }
+
+    /// While a route is active: keep location running in the background if possible,
+    /// and fetch new police events regularly so dangers that appear mid-walk are noticed.
+    private func watchActiveRoute() async {
+        let isActive = routeDestination != nil
+        locationManager.setBackgroundTracking(isActive)
+        if !isActive {
+            routeUpdate = nil
+            plannedDangerIDs = []
+        }
+        guard isActive else { return }
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(120))
+            guard !Task.isCancelled else { return }
+            if showPoliceReports {
+                await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: transitReferenceLocation)
+            }
+            routeRefreshTick += 1
         }
     }
 
@@ -512,48 +796,101 @@ struct IncidentMapView: View {
                 .padding(.top, 8)
             }
 
+            if let update = routeUpdate {
+                RouteUpdateBanner(
+                    title: update.title,
+                    message: update.message,
+                    isRerouted: update.isRerouted
+                ) {
+                    withAnimation { routeUpdate = nil }
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .padding(.top, 8)
+            }
+
             Spacer()
 
-            VStack(alignment: .trailing, spacing: 12) {
-                // Sync Swedish Police events button (available when police reports are enabled)
-                if showPoliceReports {
-                    PoliceSyncButton(isSyncing: isSyncingPoliceEvents) {
-                        Task {
-                            isSyncingPoliceEvents = true
-                            let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
-                            await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference, force: true)
-                            try? await Task.sleep(nanoseconds: 600_000_000)
-                            isSyncingPoliceEvents = false
+            HStack(alignment: .bottom, spacing: 12) {
+                if let destination = routeDestination {
+                    SafeRouteSummaryCard(
+                        destinationName: routePlan?.destinationName ?? destination.name ?? String(localized: "Destination"),
+                        originName: routeOrigin?.name,
+                        travelTime: routePlan?.recommended.travelTime,
+                        distance: routePlan?.recommended.distance,
+                        extraTime: routeComparison.extraTime,
+                        avoidedCount: routeComparison.avoided,
+                        passedCount: routeComparison.passed,
+                        dangerNames: routeDangerNames,
+                        trip: activeTrip?.trip,
+                        isLoading: isPlanningRoute && routePlan == nil,
+                        errorMessage: routeErrorMessage,
+                        onOpenDetails: routePlan == nil ? nil : { isPresentingRouteDetails = true }
+                    ) {
+                        withAnimation {
+                            routeDestination = nil
+                            routeOrigin = nil
+                            routePlan = nil
+                            selectedTripID = nil
                         }
                     }
-                    .transition(.scale.combined(with: .opacity))
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else if let home = myPlaces.effectiveHome {
+                    TakeMeHomeButton(temporaryHomeLabel: myPlaces.activeTemporaryHome?.place.label) {
+                        routePlan = nil
+                        routeOrigin = nil
+                        routeDestination = home.mapItem
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
 
-                // Toggle Swedish Police API reports button
-                PoliceFilterButton(showPoliceReports: $showPoliceReports)
+                Spacer(minLength: 0)
 
-                // Toggle Trygga platser (Safe Havens) button
-                SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
+                VStack(alignment: .trailing, spacing: 12) {
+                    // Safe Route planner button
+                    SafeRouteButton(isActive: routeDestination != nil) {
+                        isPresentingRouteSearch = true
+                    }
 
-                // Safety Walk Timer button
-                SafetyTimerButton(
-                    isActive: safetyTimerService.isActive,
-                    isEscalated: safetyTimerService.state == .escalated
-                ) {
-                    isPresentingSafetyTimerSheet = true
-                }
+                    // Sync Swedish Police events button (available when police reports are enabled)
+                    if showPoliceReports {
+                        PoliceSyncButton(isSyncing: isSyncingPoliceEvents) {
+                            Task {
+                                isSyncingPoliceEvents = true
+                                let reference = locationManager.userLocation ?? CLLocation(latitude: 59.3326, longitude: 18.0649)
+                                await PoliceAPIService.syncWithDatabase(modelContext: modelContext, referenceLocation: reference, force: true)
+                                try? await Task.sleep(nanoseconds: 600_000_000)
+                                isSyncingPoliceEvents = false
+                            }
+                        }
+                        .transition(.scale.combined(with: .opacity))
+                    }
 
-                // Discreet Fake Call button
-                DiscreetCallButton {
-                    isPresentingFakeCallLauncher = true
-                }
+                    // Toggle Swedish Police API reports button
+                    PoliceFilterButton(showPoliceReports: $showPoliceReports)
 
-                // Filter incidents by recency / time decay
-                TimeFilterMenuButton(timeFilter: $timeFilter)
+                    // Toggle Trygga platser (Safe Havens) button
+                    SafeHavensFilterButton(showSafeHavens: $showSafeHavens)
 
-                // Report danger button
-                ReportDangerButton {
-                    isPresentingReportSheet = true
+                    // Safety Walk Timer button
+                    SafetyTimerButton(
+                        isActive: safetyTimerService.isActive,
+                        isEscalated: safetyTimerService.state == .escalated
+                    ) {
+                        isPresentingSafetyTimerSheet = true
+                    }
+
+                    // Discreet Fake Call button
+                    DiscreetCallButton {
+                        isPresentingFakeCallLauncher = true
+                    }
+
+                    // Filter incidents by recency / time decay
+                    TimeFilterMenuButton(timeFilter: $timeFilter)
+
+                    // Report danger button
+                    ReportDangerButton {
+                        isPresentingReportSheet = true
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .trailing)

@@ -53,6 +53,20 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         clManager.stopUpdatingLocation()
     }
 
+    /// Keeps location updates running during an active safe route if background capability is available.
+    func setBackgroundTracking(_ enabled: Bool) {
+        guard isAuthorized else { return }
+        let backgroundModes = Bundle.main.object(forInfoDictionaryKey: "UIBackgroundModes") as? [String] ?? []
+        if backgroundModes.contains("location") {
+            clManager.allowsBackgroundLocationUpdates = enabled
+            clManager.showsBackgroundLocationIndicator = enabled
+        }
+        clManager.pausesLocationUpdatesAutomatically = !enabled
+        if enabled {
+            clManager.startUpdatingLocation()
+        }
+    }
+
     func dismissApproachingIncident() {
         approachingIncident = nil
     }

@@ -53,6 +53,11 @@ final class MyPlacesStore {
         [effectiveHome].compactMap { $0 } + places
     }
 
+    /// Saved places other than home
+    var otherSavedPlaces: [SavedPlace] {
+        places
+    }
+
     func removeAll() {
         home = nil
         temporaryHome = nil

@@ -42,6 +42,26 @@ final class NotificationService: Sendable {
         }
     }
 
+    /// Tells the user something changed on their active safe route while the app is in the background.
+    func scheduleRouteUpdateNotification(title: String, body: String, id: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        content.interruptionLevel = .timeSensitive
+
+        let request = UNNotificationRequest(
+            identifier: "route-update-\(id)",
+            content: content,
+            trigger: UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        )
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error {
+                print("Failed to deliver route update notification: \(error.localizedDescription)")
+            }
+        }
+    }
+
     func scheduleSafetyTimerNotifications(durationSeconds: TimeInterval, destinationNote: String) {
         cancelSafetyTimerNotifications()
 

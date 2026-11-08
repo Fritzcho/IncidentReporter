@@ -1,6 +1,15 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
+    "· %lld min" : {
+
+    },
+    "· platform %@" : {
+
+    },
     "%.1f km" : {
 
     },
@@ -38,12 +47,32 @@
         }
       }
     },
+    "%@ – %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ – %2$@"
+          }
+        }
+      }
+    },
     "%@ / %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ / %2$@"
+          }
+        }
+      }
+    },
+    "%@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@"
           }
         }
       }
@@ -94,7 +123,26 @@
         }
       }
     },
+    "%@. New route: %lld min." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@. New route: %2$lld min."
+          }
+        }
+      }
+    },
+    "%@. No safer way found, stay alert." : {
+
+    },
     "%lld" : {
+
+    },
+    "%lld change(s)" : {
+
+    },
+    "%lld danger(s) on the way" : {
 
     },
     "%lld m" : {
@@ -161,10 +209,36 @@
         }
       }
     },
+    "%lld min walk" : {
+
+    },
+    "%lld min walk · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld min walk · %2$@"
+          }
+        }
+      }
+    },
+    "%lld stops · %lld min" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld stops · %2$lld min"
+          }
+        }
+      }
+    },
     "•" : {
 
     },
     "• %@" : {
+
+    },
+    "+%lld" : {
 
     },
     "+%lld min late" : {
@@ -300,6 +374,16 @@
     "Appearance & Info" : {
 
     },
+    "Arrive %@ at %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Arrive %1$@ at %2$@"
+          }
+        }
+      }
+    },
     "Assign the iPhone Action Button or Back Tap in Apple Shortcuts to 'Trigger Fake Call', 'Start Safety Timer', or 'Report Danger' for instant eyes-free access." : {
 
     },
@@ -319,6 +403,22 @@
           }
         }
       }
+    },
+    "Avoids %lld danger(s)" : {
+
+    },
+    "Avoids %lld danger(s) · %lld min longer than fastest" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Avoids %1$lld danger(s) · %2$lld min longer than fastest"
+          }
+        }
+      }
+    },
+    "Avoids %lld danger(s) at no extra time" : {
+
     },
     "Balanced" : {
 
@@ -438,6 +538,19 @@
         }
       }
     },
+    "Change to" : {
+
+    },
+    "Change: walk %lld min to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Change: walk %1$lld min to %2$@"
+          }
+        }
+      }
+    },
     "Changes on my route" : {
 
     },
@@ -510,6 +623,9 @@
       }
     },
     "Chosen place" : {
+
+    },
+    "Clear destination" : {
 
     },
     "Clear Expired Alerts (> 48h)" : {
@@ -597,6 +713,9 @@
           }
         }
       }
+    },
+    "Couldn't find a walking route there." : {
+
     },
     "Couldn't open %@" : {
 
@@ -690,6 +809,9 @@
         }
       }
     },
+    "Destination" : {
+
+    },
     "Destination note (e.g. Home, Odenplan)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -743,6 +865,12 @@
           }
         }
       }
+    },
+    "Directions" : {
+
+    },
+    "Directions & public transport" : {
+
     },
     "Disable police reports" : {
       "extractionState" : "manual",
@@ -819,6 +947,9 @@
       }
     },
     "Discreet Safety Call" : {
+
+    },
+    "Dismiss" : {
 
     },
     "Done" : {
@@ -952,6 +1083,9 @@
     "End now" : {
 
     },
+    "End route" : {
+
+    },
     "English" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1032,6 +1166,12 @@
         }
       }
     },
+    "Finding the fastest safe way…" : {
+
+    },
+    "First departure %@" : {
+
+    },
     "First departure: %@ → %@" : {
       "localizations" : {
         "en" : {
@@ -1042,7 +1182,38 @@
         }
       }
     },
+    "Follow the green line on the map." : {
+
+    },
     "Freshness" : {
+
+    },
+    "from %@" : {
+
+    },
+    "From %@ at %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "From %1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "From my location" : {
+
+    },
+    "From: my location or a place" : {
+
+    },
+    "Get off at" : {
+
+    },
+    "Get on at" : {
+
+    },
+    "Get the fastest walking route there that avoids recent reported dangers." : {
 
     },
     "GPS location not available. Defaulting to Central Stockholm." : {
@@ -1100,6 +1271,9 @@
 
     },
     "Hide safe havens" : {
+
+    },
+    "Hide stops" : {
 
     },
     "High Danger" : {
@@ -1373,6 +1547,9 @@
     "New contact" : {
 
     },
+    "New danger on your route" : {
+
+    },
     "Next departure %@" : {
 
     },
@@ -1409,6 +1586,9 @@
           }
         }
       }
+    },
+    "No changes" : {
+
     },
     "No community incidents reported yet." : {
       "extractionState" : "manual",
@@ -1481,6 +1661,9 @@
         }
       }
     },
+    "No reported dangers on the way" : {
+
+    },
     "No Safety Alerts" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1545,6 +1728,9 @@
     "Opens IncidentTracker directly to the Report Safety Alert screen with your current location." : {
 
     },
+    "Options" : {
+
+    },
     "Or enter custom name..." : {
 
     },
@@ -1565,6 +1751,9 @@
         }
       }
     },
+    "Passes %lld reported danger(s), no faster safe way found" : {
+
+    },
     "Physical Assault / Fight" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1581,6 +1770,9 @@
           }
         }
       }
+    },
+    "Pick a start point from the list, or choose My location." : {
+
     },
     "Pickup location" : {
 
@@ -1823,7 +2015,13 @@
         }
       }
     },
+    "Rerouted around a new danger" : {
+
+    },
     "Ride apps" : {
+
+    },
+    "Route active" : {
 
     },
     "Route alerts tell you when a new danger appears on the way and the route changes." : {
@@ -1832,7 +2030,16 @@
     "Running" : {
 
     },
+    "Safe route" : {
+
+    },
+    "Safe route to" : {
+
+    },
     "Safe routes" : {
+
+    },
+    "Safest fast" : {
 
     },
     "Safety & Quick Triggers" : {
@@ -2128,6 +2335,12 @@
     "Source" : {
 
     },
+    "Start" : {
+
+    },
+    "Start %@" : {
+
+    },
     "Start %lld-Minute Safety Timer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2165,6 +2378,9 @@
         }
       }
     },
+    "Start from my location" : {
+
+    },
     "Start safety timer" : {
 
     },
@@ -2178,6 +2394,9 @@
 
     },
     "Staying at a friend's? Add a temporary home and \"Take me home\" goes there until it ends." : {
+
+    },
+    "Steps" : {
 
     },
     "Stop Recording" : {
@@ -2201,6 +2420,9 @@
 
     },
     "Stop voice memo preview" : {
+
+    },
+    "Stops & changes" : {
 
     },
     "Streets appear clear or no alerts match your search." : {
@@ -2328,7 +2550,13 @@
         }
       }
     },
+    "Take me home" : {
+
+    },
     "Take me home goes here until then. After that it goes to your normal home again." : {
+
+    },
+    "Take me home to %@" : {
 
     },
     "Taxi companies" : {
@@ -2392,7 +2620,16 @@
     "Timing Delay" : {
 
     },
+    "To: address or place" : {
+
+    },
+    "towards %@" : {
+
+    },
     "Tram & light rail" : {
+
+    },
+    "Travel by" : {
 
     },
     "Trigger Discreet Fake Call" : {
@@ -2439,6 +2676,9 @@
       }
     },
     "Trygg plats • Safe Haven" : {
+
+    },
+    "Type to start from another place" : {
 
     },
     "Unknown distance" : {
@@ -2524,6 +2764,16 @@
     "Walk" : {
 
     },
+    "Walk %lld min to %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Walk %1$lld min to %2$@"
+          }
+        }
+      }
+    },
     "Walk Here (Apple Maps)" : {
 
     },
@@ -2540,6 +2790,9 @@
 
     },
     "Warning distance" : {
+
+    },
+    "Where are you going?" : {
 
     },
     "You marked this danger as over. It doesn't trigger alerts or affect your safe routes." : {
