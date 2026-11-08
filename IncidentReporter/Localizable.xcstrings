@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%.1f km" : {
+
+    },
     "%.1f km ahead" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -91,6 +94,9 @@
     "%lld" : {
 
     },
+    "%lld m" : {
+
+    },
     "%lld m ahead" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -178,6 +184,9 @@
         }
       }
     },
+    "1 km" : {
+
+    },
     "1.2.0 (Sprint 2)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -196,6 +205,15 @@
       }
     },
     "14 Test Incidents Reloaded" : {
+
+    },
+    "200 m" : {
+
+    },
+    "500 m" : {
+
+    },
+    "A few minutes extra to avoid most recent dangers." : {
 
     },
     "Accept" : {
@@ -224,6 +242,12 @@
         }
       }
     },
+    "Add temporary home" : {
+
+    },
+    "Add trusted contact" : {
+
+    },
     "Address" : {
 
     },
@@ -246,6 +270,9 @@
           }
         }
       }
+    },
+    "Alerts" : {
+
     },
     "Anonymous Community Report" : {
       "extractionState" : "manual",
@@ -286,6 +313,9 @@
           }
         }
       }
+    },
+    "Balanced" : {
+
     },
     "Being Followed / Stalked" : {
       "extractionState" : "manual",
@@ -365,6 +395,9 @@
     "Cancel Scheduled Call" : {
 
     },
+    "Careful" : {
+
+    },
     "Category" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -398,6 +431,9 @@
           }
         }
       }
+    },
+    "Changes on my route" : {
+
     },
     "Check in immediately or alert your emergency contact." : {
       "extractionState" : "manual",
@@ -466,6 +502,9 @@
           }
         }
       }
+    },
+    "Chosen place" : {
+
     },
     "Clear Expired Alerts (> 48h)" : {
 
@@ -556,6 +595,9 @@
     "Couldn't open %@" : {
 
     },
+    "Couldn't search for places. Check your connection and try again." : {
+
+    },
     "Current device GPS location" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -589,6 +631,9 @@
           }
         }
       }
+    },
+    "Dangers you've ignored" : {
+
     },
     "Dark / Broken Lighting" : {
       "extractionState" : "manual",
@@ -838,6 +883,15 @@
         }
       }
     },
+    "e.g. Anna's place" : {
+
+    },
+    "e.g. Work" : {
+
+    },
+    "Edit contact" : {
+
+    },
     "Elevated Risk" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -888,6 +942,9 @@
           }
         }
       }
+    },
+    "End now" : {
+
     },
     "English" : {
       "extractionState" : "manual",
@@ -942,6 +999,12 @@
           }
         }
       }
+    },
+    "Fastest" : {
+
+    },
+    "Fastest option" : {
+
     },
     "Filter by time range: %@" : {
 
@@ -1053,6 +1116,15 @@
     "Historical" : {
 
     },
+    "Home" : {
+
+    },
+    "Home, temporary home, saved places and trusted contacts are deleted from this phone." : {
+
+    },
+    "How careful" : {
+
+    },
     "I'm Safe" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1139,9 +1211,6 @@
         }
       }
     },
-    "Incident recency" : {
-
-    },
     "Incident Recency" : {
 
     },
@@ -1179,9 +1248,6 @@
         }
       }
     },
-    "Incidents from the last %@" : {
-
-    },
     "Includes voice memo" : {
 
     },
@@ -1207,6 +1273,9 @@
           }
         }
       }
+    },
+    "Language, shake action & app settings" : {
+
     },
     "Last departure %@" : {
 
@@ -1234,6 +1303,9 @@
         }
       }
     },
+    "Longer detours to keep well away from any reported danger." : {
+
+    },
     "Manage active safety timer" : {
 
     },
@@ -1257,10 +1329,19 @@
     "Map Alerts & Freshness" : {
 
     },
-    "Map layers" : {
+    "Message" : {
 
     },
-    "Message" : {
+    "My location" : {
+
+    },
+    "My page" : {
+
+    },
+    "My places" : {
+
+    },
+    "Name" : {
 
     },
     "Nearby" : {
@@ -1279,6 +1360,9 @@
           }
         }
       }
+    },
+    "New contact" : {
+
     },
     "Next departure %@" : {
 
@@ -1420,6 +1504,9 @@
     "Older incidents fade automatically to keep danger signals prominent." : {
 
     },
+    "Only small detours around recent, serious dangers." : {
+
+    },
     "Open 24/7 • Staffed" : {
 
     },
@@ -1486,6 +1573,9 @@
     "Pickup location" : {
 
     },
+    "Place" : {
+
+    },
     "Platform %@" : {
 
     },
@@ -1511,9 +1601,6 @@
           }
         }
       }
-    },
-    "Police reports" : {
-
     },
     "POLISEN" : {
 
@@ -1568,6 +1655,12 @@
           }
         }
       }
+    },
+    "Privacy" : {
+
+    },
+    "Public transport" : {
+
     },
     "Purge Expired Incidents?" : {
 
@@ -1649,6 +1742,18 @@
     "Remind Me" : {
 
     },
+    "Remove" : {
+
+    },
+    "Remove all" : {
+
+    },
+    "Remove all places and contacts" : {
+
+    },
+    "Remove all your places and contacts?" : {
+
+    },
     "Report Danger" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1706,10 +1811,13 @@
     "Ride apps" : {
 
     },
+    "Route alerts tell you when a new danger appears on the way and the route changes." : {
+
+    },
     "Running" : {
 
     },
-    "Safe havens" : {
+    "Safe routes" : {
 
     },
     "Safety & Quick Triggers" : {
@@ -1817,6 +1925,9 @@
         }
       }
     },
+    "Safety timer" : {
+
+    },
     "Safety Timer Expired!" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1868,7 +1979,19 @@
         }
       }
     },
+    "Save" : {
+
+    },
+    "Save a place" : {
+
+    },
+    "Save another place" : {
+
+    },
     "Schedule Call (%llds)" : {
+
+    },
+    "Search address or place" : {
 
     },
     "Search alerts, categories, advice..." : {
@@ -1922,6 +2045,9 @@
         }
       }
     },
+    "Set home" : {
+
+    },
     "Settings" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1957,9 +2083,6 @@
       }
     },
     "Show nearest transit stops" : {
-
-    },
-    "Show on map" : {
 
     },
     "Show safe havens" : {
@@ -2014,7 +2137,13 @@
     "Start Safety Timer" : {
 
     },
+    "Start with" : {
+
+    },
     "Starts a 20-minute Safety Walk countdown timer with check-in reminders." : {
+
+    },
+    "Staying at a friend's? Add a temporary home and \"Take me home\" goes there until it ends." : {
 
     },
     "Stop Recording" : {
@@ -2165,7 +2294,7 @@
         }
       }
     },
-    "Syncing police events…" : {
+    "Take me home goes here until then. After that it goes to your normal home again." : {
 
     },
     "Taxi companies" : {
@@ -2174,7 +2303,16 @@
     "Tell the dispatcher this address when you call." : {
 
     },
+    "Temporary home" : {
+
+    },
+    "Temporary home until %@" : {
+
+    },
     "Testing & Demo Data" : {
+
+    },
+    "The first contact is alerted if your safety timer runs out." : {
 
     },
     "This device can't place phone calls." : {
@@ -2223,9 +2361,6 @@
     "Tram & light rail" : {
 
     },
-    "Transit stops" : {
-
-    },
     "Trigger Discreet Fake Call" : {
 
     },
@@ -2248,6 +2383,9 @@
           }
         }
       }
+    },
+    "Trusted contacts" : {
+
     },
     "Trusted Guardian Contact" : {
       "extractionState" : "manual",
@@ -2285,6 +2423,15 @@
           }
         }
       }
+    },
+    "Unnamed contact" : {
+
+    },
+    "Until" : {
+
+    },
+    "Use my current location" : {
+
     },
     "Used to pre-fill an emergency SMS with your live Apple Maps coordinates if the timer expires." : {
 
@@ -2340,10 +2487,28 @@
         }
       }
     },
+    "Walk" : {
+
+    },
     "Walk Here (Apple Maps)" : {
 
     },
     "Walking directions" : {
+
+    },
+    "Warn me about all of them again" : {
+
+    },
+    "Warn me near dangers" : {
+
+    },
+    "Warning distance" : {
+
+    },
+    "Your location isn't available. Check that location access is on." : {
+
+    },
+    "Your places, contacts and ignored dangers are only stored on this phone." : {
 
     }
   },
